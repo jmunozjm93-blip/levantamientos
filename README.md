@@ -41,7 +41,7 @@ Departamento que se muestra, según *Departamento Interno*: CALZADO MUJER → Ca
 
 Son las mismas del archivo original, verificadas contra sus datos embebidos:
 
-- Solo cuentan las **tiendas que están en la hoja de supervisores**. Las columnas de sucursales que no aparecen ahí (bodegas, .com, tiendas nuevas sin asignar) se descartan y se listan en el resumen de carga como "sin supervisor".
+- Solo cuentan las **tiendas que están en la hoja de supervisores** con un supervisor real: si la columna trae `Z` (relleno para tienda virtual o CD), `-` o `N/A`, la tienda se descarta. Las columnas de sucursales que no aparecen ahí (bodegas, .com, tiendas nuevas sin asignar) se descartan y se listan en el resumen de carga como "sin supervisor".
 - La **cantidad** de un modelo es la suma de sus tiendas con supervisor, incluyendo valores negativos. Por eso puede diferir del "Total general" del Excel, que suma todas las columnas.
 - Los modelos cuya suma queda en cero o negativa **no se incluyen**.
 - Las fotos vienen de `Excel_Macro.xlsx`: `MODELO.jpg` → ID de Drive. Si un modelo aparece varias veces manda la última fila.

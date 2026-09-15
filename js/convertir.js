@@ -38,6 +38,9 @@
     'DEPORTES HOMBRE': 'Deporte hombre', 'JUVENIL HOMBRE': 'Juvenil', 'KIDS ZAPATILLAS': 'Kids',
   };
 
+  // valores de la columna Supervisor que significan "nadie": esas tiendas se descartan
+  const SIN_SUPERVISOR = ['Z', '-', 'N/A', 'NA', 'SIN SUPERVISOR'];
+
   // ---------- utilitarios ----------
   const vacio = v => v == null || v === '';
   const txt = v => vacio(v) ? '' : String(v).trim();
@@ -102,7 +105,8 @@
       if (vistos[c]) throw new Error(`Hoja "${nombre}": la tienda ${c} aparece dos veces`);
       vistos[c] = 1;
       const nom = txt(r[1]) || c, sup = nombrePersona(r[2]);
-      if (!sup) throw new Error(`Hoja "${nombre}": la tienda ${nom} no tiene supervisor`);
+      // "Z" es un relleno para tienda virtual / centro de distribución: cuenta como sin supervisor y no entra
+      if (!sup || SIN_SUPERVISOR.includes(sup)) continue;
       tiendas.push({ cod: c, nombre: nom, sup });
     }
     if (!tiendas.length) throw new Error(`Hoja "${nombre}": la lista de supervisores está vacía`);

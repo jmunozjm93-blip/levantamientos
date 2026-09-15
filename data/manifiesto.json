@@ -101,10 +101,10 @@
   },
   "lapolar": {
    "nombre": "La Polar",
-   "subido": "2026-09-15T21:55:30.467Z",
+   "subido": "2026-09-15T22:01:56.119Z",
    "skus": 84,
    "uds": 10641,
-   "tiendas": 43,
+   "tiendas": 41,
    "hojas": [
     {
      "depto": "Deporte",
@@ -130,7 +130,7 @@
    ]
   }
  },
- "actualizado": "2026-09-15T21:55:30.486Z",
+ "actualizado": "2026-09-15T22:01:56.119Z",
  "imagenes": {
   "subido": "2026-09-15T21:21:28.352Z",
   "modelos": 45486
