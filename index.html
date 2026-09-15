@@ -2,7 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a3a6b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Levantamientos">
 <title>Levantamientos · Grupo Depor</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -54,6 +58,27 @@ td{padding:7px 10px;vertical-align:middle;}
   th{padding:12px 14px;font-size:inherit;}td{padding:8px 14px;}
   .tc{width:76px;padding:6px;}.tc img{width:64px;height:64px;}
 }
+/* ---------- celular (iPhone / Android): tarjetas en vez de tabla ---------- */
+.cards{display:none;padding:10px 10px 4px;}
+.card{display:grid;grid-template-columns:64px 1fr;gap:4px 12px;background:white;border-radius:10px;padding:10px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.07);}
+.card .cimg{grid-row:1/4;width:64px;height:64px;border:1px solid #dde4ef;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;color:#c5d0e0;font-size:.7rem;}
+.card .cimg img{width:100%;height:100%;object-fit:contain;border-radius:6px;cursor:zoom-in;}
+.card .crow{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.card .crow strong{font-size:.95rem;color:#1a3a6b;word-break:break-all;}
+.card .cdesc{font-size:.82rem;color:#333;line-height:1.3;}
+.card .cmeta{font-size:.72rem;color:#667;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;}
+.fo{display:none;}
+@media(max-width:640px){
+  html{-webkit-text-size-adjust:100%;}
+  body{padding-bottom:env(safe-area-inset-bottom);}
+  .fg select,.fg input{font-size:16px;} /* 16px evita que iOS haga zoom al tocar un filtro */
+  .tw table{display:none;} .tw{padding:0 10px;}
+  .cards{display:block;}
+  .ib{align-items:center;}
+  .fo{display:inline-block;font-size:.8rem;padding:6px 8px;border:1.5px solid #c5d0e0;border-radius:8px;background:#fff;color:#1a3a6b;max-width:100%;}
+  .pag button{padding:8px 10px;min-width:40px;}
+  .meta{font-size:.68rem;}
+}
 .lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center;padding:20px;}
 .lb.open{display:flex;}
 .lb img{max-width:92vw;max-height:88vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
@@ -74,7 +99,19 @@ td{padding:7px 10px;vertical-align:middle;}
 <div class="ib">
   <span>Mostrando <strong id="cs">0</strong> de <strong id="ct">0</strong> SKUs</span>
   <span id="tq">Total: <strong>0</strong> uds.</span>
+  <select class="fo" id="fo" onchange="ordenarMovil(this.value)">
+    <option value="">Ordenar…</option>
+    <option value="6d">Cantidad: mayor a menor</option>
+    <option value="6a">Cantidad: menor a mayor</option>
+    <option value="2a">Modelo A–Z</option>
+    <option value="3a">Descripción A–Z</option>
+    <option value="0a">Cliente</option>
+    <option value="1a">Departamento</option>
+    <option value="5a">Marca</option>
+    <option value="4a">Temporada</option>
+  </select>
 </div>
+<div class="cards" id="cards"></div>
 
 <div class="tw">
   <table>
@@ -155,11 +192,16 @@ function construir(clientes, man){
   });
   F=RAW.slice();
   // línea de resumen: semana del Excel y fecha de carga por cliente
-  var h=clientes.map(function(c){
+  // los clientes con la misma semana y fecha de carga se agrupan en una sola línea (en el celular ocupa menos)
+  var grupos={}, orden=[];
+  clientes.forEach(function(c){
     var sem={}; c.hojas.forEach(function(x){ var s=(x.semana||'').split('|')[0].trim(); if(s) sem[s]=1; });
     var reg=(man.clientes||{})[c.clave]||{};
-    return '<span>'+badgeFor(c.cliente)+' '+Object.keys(sem).join(', ')+(reg.subido?' · cargado '+fechaCorta(reg.subido):'')+'</span>';
-  }).join('');
+    var k=Object.keys(sem).join(', ')+(reg.subido?' · cargado '+fechaCorta(reg.subido):'');
+    if(!grupos[k]){ grupos[k]=[]; orden.push(k); }
+    grupos[k].push(badgeFor(c.cliente));
+  });
+  var h=orden.map(function(k){ return '<span>'+grupos[k].join(' ')+' '+k+'</span>'; }).join('');
   document.getElementById('meta').innerHTML=h+'<a href="cargar.html">cargar levantamiento</a>';
   document.getElementById('cargando').style.display='none';
   initFiltros();
@@ -293,12 +335,21 @@ function render(){
   document.getElementById('ct').textContent=RAW.length;
   var tot=F.reduce(function(s,r){return s+getQ(r);},0);
   document.getElementById('tq').innerHTML='Total: <strong>'+tot.toLocaleString()+'</strong> uds.';
-  if(F.length===0){
-    document.getElementById('tb').innerHTML='';
-    document.getElementById('nr').style.display='block';
-  } else {
-    document.getElementById('nr').style.display='none';
-    document.getElementById('tb').innerHTML=pg.map(function(r){
+  var tb=document.getElementById('tb'), cards=document.getElementById('cards');
+  MODO_DIBUJADO=MOVIL.matches;
+  document.getElementById('nr').style.display=F.length===0?'block':'none';
+  tb.innerHTML=''; cards.innerHTML='';
+  if(F.length && MOVIL.matches){
+    // celular: tarjetas (la tabla queda oculta por CSS)
+    cards.innerHTML=pg.map(function(r){
+      var img=r[7]?'<img src="'+IMG+r[7]+'&sz=w160" loading="lazy" onclick="openLB(\''+r[7]+'\')">':'sin foto';
+      return '<div class="card"><div class="cimg">'+img+'</div>'
+        +'<div class="crow"><strong>'+r[2]+'</strong><span class="qty">'+getQ(r)+'</span></div>'
+        +'<div class="cdesc">'+r[3]+'</div>'
+        +'<div class="cmeta">'+badgeFor(C[r[0]])+'<span>'+D[r[1]]+'</span><span>·</span><span>'+T[r[4]]+'</span><span>·</span><span>'+M[r[5]]+'</span></div></div>';
+    }).join('');
+  } else if(F.length){
+    tb.innerHTML=pg.map(function(r){
       var img=r[7]?'<img src="'+IMG+r[7]+'&sz=w80" loading="lazy" onclick="openLB(\''+r[7]+'\')">':'';
       return '<tr><td class="tc">'+img+'</td><td>'+badgeFor(C[r[0]])+'</td><td>'
         +D[r[1]]+'</td><td><strong>'+r[2]+'</strong></td><td>'+r[3]+'</td><td>'
@@ -307,6 +358,19 @@ function render(){
     }).join('');
   }
   renderPag();
+}
+
+// celular o escritorio: se decide por el ancho y se vuelve a dibujar al girar el teléfono
+var MOVIL=window.matchMedia('(max-width:640px)');
+var MODO_DIBUJADO=null;
+window.addEventListener('resize',function(){ if(RAW.length && MOVIL.matches!==MODO_DIBUJADO) render(); });
+// orden desde el selector del celular: columna + sentido (a = ascendente, d = descendente)
+function ordenarMovil(v){
+  if(!v) return;
+  SC=parseInt(v); SD=v.slice(-1)==='d'?-1:1;
+  document.querySelectorAll('th').forEach(function(t){if(!t.classList.contains('ns'))t.className='';});
+  document.querySelectorAll('th')[SC+1].className=SD===1?'sa':'sd';
+  doSort(SC); CP=1; render();
 }
 
 function renderPag(){
@@ -335,7 +399,7 @@ function goP(p){
 function resetF(){
   ORDEN_FILTROS.forEach(function(id){document.getElementById(id).value='-1';});
   refreshDropdowns();
-  document.getElementById('fq').value='';
+  document.getElementById('fq').value=''; document.getElementById('fo').value='';
   AT=-1; SI=-1; F=RAW.slice(); SC=-1; SD=1;
   document.querySelectorAll('th').forEach(function(t){if(!t.classList.contains('ns'))t.className='';});
   CP=1; render();
