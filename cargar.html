@@ -189,9 +189,17 @@ async function cargarEstado() {
 cargarEstado();
 
 // ---------- archivos ----------
-const worker = new Worker('js/worker-convertir.js');
+// abierta con doble clic (file://) el navegador bloquea el Web Worker y no se puede convertir nada:
+// se avisa y se manda a la versión publicada
+let worker = null;
+try { if (location.protocol === 'file:') throw new Error('file'); worker = new Worker('js/worker-convertir.js'); } catch (e) {
+  const n = document.createElement('div'); n.className = 'box'; n.style.borderColor = '#ef4444';
+  n.innerHTML = `<div class="st bad">✗ Esta página no funciona abierta desde el archivo local (${esc(location.protocol)}). Ábrela desde el sitio publicado:</div>
+    <p style="margin:8px 0 0"><a href="https://${OWNER}.github.io/${REPO}/cargar.html">https://${OWNER}.github.io/${REPO}/cargar.html</a></p>`;
+  document.querySelector('main').prepend(n);
+}
 const pend = {};
-worker.onmessage = e => { const h = pend[e.data.id]; if (h) h(e.data); };
+if (worker) worker.onmessage = e => { const h = pend[e.data.id]; if (h) h(e.data); };
 let seq = 0;
 const cola = []; let ocupado = false;
 
@@ -222,6 +230,7 @@ function procesar(file) {
   const info = Convertir.identificar(file.name);
   const c = tarjeta(file, info);
   if (!info) { setSt(c, 'bad', 'El nombre no corresponde a ningún cliente. Debe ser exactamente uno de los nombres de la lista (ej. "Levantamiento Paris.xlsx").'); return; }
+  if (!worker) { setSt(c, 'bad', '✗ No se puede convertir desde el archivo local. Abre la página desde el sitio publicado (ver aviso arriba).'); return; }
   cola.push({ file, info, c }); siguiente();
 }
 function siguiente() {
