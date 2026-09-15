@@ -64,10 +64,10 @@ td{padding:7px 10px;vertical-align:middle;}
 <header><img src="img/header.jpg" alt="Grupo Depor"></header>
 <div class="meta" id="meta">Cargando levantamientos…</div>
 <div class="filters">
-  <div class="fg"><label>Cliente</label><select id="fc"></select></div>
-  <div class="fg"><label>Departamento</label><select id="fd"></select></div>
   <div class="fg"><label>Supervisor</label><select id="fs"></select></div>
+  <div class="fg"><label>Cliente</label><select id="fc"></select></div>
   <div class="fg"><label>Tienda</label><select id="ft"></select></div>
+  <div class="fg"><label>Departamento</label><select id="fd"></select></div>
   <div class="fg full"><label>Buscar modelo / descripcion</label><input type="text" id="fq" placeholder="Ej: A01716C-001..." autocomplete="off"></div>
   <button class="btn-r" onclick="resetF()">✕ Limpiar filtros</button>
 </div>
@@ -197,42 +197,41 @@ function setSelect(id, idxArr, lookup, ph, keepVal){
   if(keepVal>=0 && idxArr.indexOf(keepVal)>=0) el.value=keepVal;
 }
 
-// supervisores disponibles según cliente y departamento (por las tiendas que realmente tienen)
-function availSups(ci,di){
+// Filtros en cascada, en este orden: Supervisor → Cliente → Tienda → Departamento.
+// Cada lista muestra solo lo que existe para lo elegido en las listas anteriores
+// (al elegir un supervisor, en Tienda quedan únicamente sus tiendas).
+var ORDEN_FILTROS=['fs','fc','ft','fd'];
+var PLACEHOLDER={fs:'Todos',fc:'Todos',ft:'Todas',fd:'Todos'};
+
+// opciones disponibles para la lista `id` según lo elegido en las listas que van antes
+function disponibles(id, cons){
   var set={};
   RAW.forEach(function(r){
-    if((ci<0||r[0]===ci)&&(di<0||r[1]===di)){
-      r[9].forEach(function(t){
-        var s=supOf(r[0],r[1],t);
-        if(s>=0) set[s]=1;
-      });
-    }
+    if(cons.ci>=0 && r[0]!==cons.ci) return;
+    if(cons.di>=0 && r[1]!==cons.di) return;
+    r[9].forEach(function(t){
+      if(cons.ti>=0 && t!==cons.ti) return;
+      var s=supOf(r[0],r[1],t);
+      if(s<0) return;
+      if(cons.si>=0 && s!==cons.si) return;
+      set[id==='fs'?s:id==='fc'?r[0]:id==='ft'?t:r[1]]=1;
+    });
   });
   return Object.keys(set).map(Number).sort(function(a,b){return a-b;});
 }
 
-// tiendas disponibles según cliente, departamento y supervisor
-function availTiendas(ci,di,si){
-  var set={};
-  RAW.forEach(function(r){
-    if((ci<0||r[0]===ci)&&(di<0||r[1]===di)){
-      r[9].forEach(function(t){
-        if(si<0 || supOf(r[0],r[1],t)===si) set[t]=1;
-      });
+// recalcula las listas que vienen después de `desde` (todas si no se indica), conservando la elección si sigue válida
+function refreshDropdowns(desde){
+  var k0=desde?ORDEN_FILTROS.indexOf(desde)+1:0;
+  for(var k=k0;k<ORDEN_FILTROS.length;k++){
+    var id=ORDEN_FILTROS[k], cons={si:-1,ci:-1,ti:-1,di:-1};
+    for(var j=0;j<k;j++){
+      var v=gi(ORDEN_FILTROS[j]);
+      if(ORDEN_FILTROS[j]==='fs') cons.si=v; else if(ORDEN_FILTROS[j]==='fc') cons.ci=v; else if(ORDEN_FILTROS[j]==='ft') cons.ti=v; else cons.di=v;
     }
-  });
-  return Object.keys(set).map(Number).sort(function(a,b){return a-b;});
-}
-
-function refreshDropdowns(keepSup, keepTienda){
-  var ci=gi('fc'), di=gi('fd');
-  var si=keepSup!==undefined?keepSup:gi('fs');
-  var supsAv=availSups(ci,di);
-  setSelect('fs',supsAv,S,'Todos',si>=0&&supsAv.indexOf(si)>=0?si:-1);
-  var si2=gi('fs');
-  var tiAv=availTiendas(ci,di,si2);
-  var curTi=keepTienda!==undefined?keepTienda:gi('ft');
-  setSelect('ft',tiAv,TI,'Todas',curTi>=0&&tiAv.indexOf(curTi)>=0?curTi:-1);
+    var av=disponibles(id,cons), cur=gi(id);
+    setSelect(id,av,{fs:S,fc:C,ft:TI,fd:D}[id],PLACEHOLDER[id],av.indexOf(cur)>=0?cur:-1);
+  }
 }
 
 function getQ(r){
@@ -259,20 +258,13 @@ function applyF(){
 }
 
 function initFiltros(){
-  var allC=C.map(function(_,i){return i;}), allD=D.map(function(_,i){return i;});
-  setSelect('fc',allC,C,'Todos',-1); setSelect('fd',allD,D,'Todos',-1);
-  var allS=S.map(function(_,i){return i;}); setSelect('fs',allS,S,'Todos',-1);
-  var allT=TI.map(function(_,i){return i;}); setSelect('ft',allT,TI,'Todas',-1);
+  ORDEN_FILTROS.forEach(function(id){document.getElementById(id).innerHTML='<option value="-1">'+PLACEHOLDER[id]+'</option>';});
+  refreshDropdowns();
 }
 
-document.getElementById('fc').addEventListener('change',function(){refreshDropdowns(-1,-1);applyF();});
-document.getElementById('fd').addEventListener('change',function(){refreshDropdowns(gi('fs'),gi('ft'));applyF();});
-document.getElementById('fs').addEventListener('change',function(){
-  var ci=gi('fc'),di=gi('fd'),si=gi('fs'),tiAv=availTiendas(ci,di,si),cur=gi('ft');
-  setSelect('ft',tiAv,TI,'Todas',tiAv.indexOf(cur)>=0?cur:-1);
-  applyF();
+ORDEN_FILTROS.forEach(function(id){
+  document.getElementById(id).addEventListener('change',function(){refreshDropdowns(id);applyF();});
 });
-document.getElementById('ft').addEventListener('change',applyF);
 document.getElementById('fq').addEventListener('input',applyF);
 
 function sortBy(col){
@@ -341,9 +333,8 @@ function goP(p){
 }
 
 function resetF(){
-  ['fc','fd','fs','ft'].forEach(function(id){document.getElementById(id).value='-1';});
-  var allS=S.map(function(_,i){return i;}); setSelect('fs',allS,S,'Todos',-1);
-  var allT=TI.map(function(_,i){return i;}); setSelect('ft',allT,TI,'Todas',-1);
+  ORDEN_FILTROS.forEach(function(id){document.getElementById(id).value='-1';});
+  refreshDropdowns();
   document.getElementById('fq').value='';
   AT=-1; SI=-1; F=RAW.slice(); SC=-1; SD=1;
   document.querySelectorAll('th').forEach(function(t){if(!t.classList.contains('ns'))t.className='';});
