@@ -199,7 +199,11 @@ try { if (location.protocol === 'file:') throw new Error('file'); worker = new W
   document.querySelector('main').prepend(n);
 }
 const pend = {};
-if (worker) worker.onmessage = e => { const h = pend[e.data.id]; if (h) h(e.data); };
+if (worker) {
+  worker.onmessage = e => { const h = pend[e.data.id]; if (h) h(e.data); };
+  // si el worker no arranca (no carga SheetJS desde el CDN, red corporativa, etc.) se avisa en las tarjetas pendientes
+  worker.onerror = e => { const msg = 'El conversor falló: ' + (e.message || 'no pudo cargar sus scripts (¿bloqueo de red a cdnjs.cloudflare.com?)'); Object.keys(pend).forEach(id => { pend[id]({ id: +id, etapa: 'error', error: msg }); }); };
+}
 let seq = 0;
 const cola = []; let ocupado = false;
 
