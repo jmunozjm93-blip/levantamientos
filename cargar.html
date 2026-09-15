@@ -163,6 +163,11 @@ el('btnToken').onclick = async () => {
     const r = await gh('');
     const p = r && r.permissions;
     if (!p || !p.push) throw new Error('El token no tiene permiso de escritura (Contents: Read and write) sobre el repositorio');
+    // "permissions" refleja lo que puede el dueño, no lo que se le concedió al token: para verificar la
+    // escritura real se actualiza la rama a su mismo commit (no cambia nada; un token sin acceso recibe 403)
+    const ref = await gh(`/git/ref/heads/${BRANCH}`);
+    try { await gh(`/git/refs/heads/${BRANCH}`, { method: 'PATCH', body: JSON.stringify({ sha: ref.object.sha, force: false }) }); }
+    catch (e) { if (/GitHub 403/.test(e.message)) throw new Error(`El token no tiene acceso de escritura a ${OWNER}/${REPO}. Edítalo en GitHub: en "Repository access" agrega el repositorio ${REPO} y en Permissions → Contents deja "Read and write".`); throw e; }
     el('tokenSt').className = 'st ok'; el('tokenSt').textContent = `✓ Conectado a ${r.full_name} con permiso de escritura`;
     cargarEstado();
   } catch (e) { el('tokenSt').className = 'st bad'; el('tokenSt').textContent = '✗ ' + e.message; }
