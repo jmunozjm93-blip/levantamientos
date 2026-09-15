@@ -1,0 +1,19 @@
+# Sistema
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Editores
+.vscode/
+.idea/
+
+# Temporales
+*.tmp
+*.log
+~$*
+
+# Excel de levantamiento y de fotos: se quedan en el PC, no en GitHub
+*.xlsx
+
+# Archivo original (todo embebido, 10 MB): reemplazado por index.html + data/
+levantamientos.html

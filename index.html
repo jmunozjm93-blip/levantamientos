@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Levantamientos · Grupo Depor</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:Arial,sans-serif;background:#f0f4f8;color:#222;font-size:14px;}
+header{line-height:0;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+header img{width:100%;display:block;max-height:130px;object-fit:cover;object-position:center bottom;}
+.filters{background:white;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;border-bottom:2px solid #dde4ef;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg label{font-size:.7rem;font-weight:700;color:#1a3a6b;text-transform:uppercase;letter-spacing:.5px;}
+.fg select,.fg input{padding:10px;border:1.5px solid #c5d0e0;border-radius:8px;font-size:.95rem;background:#f8fafd;color:#222;outline:none;width:100%;}
+.full{grid-column:1/-1;}
+.btn-r{grid-column:1/-1;padding:12px;background:#e74c3c;color:white;border:none;border-radius:8px;cursor:pointer;font-size:1rem;font-weight:700;}
+.ib{padding:8px 16px;background:#eaf1fb;font-size:.8rem;color:#1a3a6b;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;border-bottom:1px solid #d0dced;}
+.ib strong{color:#e74c3c;}
+.meta{padding:6px 16px;background:#f6f9fd;font-size:.72rem;color:#556;display:flex;flex-wrap:wrap;gap:4px 14px;border-bottom:1px solid #dde4ef;align-items:center;}
+.meta a{color:#2d6a9f;margin-left:auto;}
+.tw{padding:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;background:white;border-radius:8px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08);font-size:.8rem;min-width:480px;}
+thead tr{background:#1a3a6b;color:white;}
+th{padding:10px;text-align:left;font-weight:700;cursor:pointer;user-select:none;white-space:nowrap;font-size:.75rem;}
+th:hover{background:#2d6a9f;}
+th.ns{cursor:default;}th.ns:hover{background:#1a3a6b;}
+th.sa::after{content:" ▲";font-size:.65em;}
+th.sd::after{content:" ▼";font-size:.65em;}
+tbody tr{border-bottom:1px solid #e8eef6;}
+tbody tr:nth-child(even){background:#f5f8fd;}
+td{padding:7px 10px;vertical-align:middle;}
+.tc{width:56px;text-align:center;padding:4px;}
+.tc img{width:50px;height:50px;object-fit:contain;border-radius:4px;border:1px solid #dde4ef;background:#fff;display:block;margin:0 auto;cursor:zoom-in;}
+.bc{display:inline-block;padding:2px 7px;border-radius:20px;font-size:.7rem;font-weight:700;white-space:nowrap;}
+.bf{background:#d4edff;color:#0056b3;}.br{background:#ffe4d4;color:#b33000;}.bp{background:#d4f5e0;color:#006b2e;}.ba{background:#ede4ff;color:#5b2a9e;}
+.bl{background:#fde2e2;color:#b91c1c;}.bh{background:#dfe3f3;color:#14224a;}
+.qty{font-weight:700;color:#1a3a6b;background:#eaf1fb;padding:2px 8px;border-radius:12px;display:inline-block;min-width:30px;text-align:center;}
+.pag{display:flex;justify-content:center;align-items:center;gap:5px;padding:12px 10px;background:white;border-top:1px solid #dde4ef;flex-wrap:wrap;}
+.pag button{padding:8px 12px;border:1.5px solid #c5d0e0;background:white;border-radius:6px;cursor:pointer;font-size:.85rem;min-height:40px;}
+.pag button.act{background:#1a3a6b;color:white;border-color:#1a3a6b;font-weight:700;}
+.pag button:disabled{opacity:.4;}
+.pi{font-size:.82rem;color:#555;}
+.nr{text-align:center;padding:40px;color:#888;}
+.msg{text-align:center;padding:40px 16px;color:#1a3a6b;font-size:.95rem;}
+.msg.err{color:#b91c1c;}
+@media(min-width:768px){
+  .filters{grid-template-columns:repeat(3,1fr);padding:16px 28px;gap:14px;}
+  .full,.btn-r{grid-column:auto;}.btn-r{margin-top:18px;padding:10px 18px;font-size:.9rem;}
+  .ib{padding:10px 28px;font-size:.85rem;}
+  .meta{padding:6px 28px;}
+  .tw{padding:16px 28px 28px;}
+  table{font-size:.875rem;min-width:unset;}
+  th{padding:12px 14px;font-size:inherit;}td{padding:8px 14px;}
+  .tc{width:76px;padding:6px;}.tc img{width:64px;height:64px;}
+}
+.lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;align-items:center;justify-content:center;padding:20px;}
+.lb.open{display:flex;}
+.lb img{max-width:92vw;max-height:88vh;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.5);}
+.lbx{position:absolute;top:16px;right:22px;color:#fff;font-size:2.4rem;font-weight:300;cursor:pointer;line-height:1;}
+</style>
+</head>
+<body>
+<header><img src="img/header.jpg" alt="Grupo Depor"></header>
+<div class="meta" id="meta">Cargando levantamientos…</div>
+<div class="filters">
+  <div class="fg"><label>Cliente</label><select id="fc"></select></div>
+  <div class="fg"><label>Departamento</label><select id="fd"></select></div>
+  <div class="fg"><label>Supervisor</label><select id="fs"></select></div>
+  <div class="fg"><label>Tienda</label><select id="ft"></select></div>
+  <div class="fg full"><label>Buscar modelo / descripcion</label><input type="text" id="fq" placeholder="Ej: A01716C-001..." autocomplete="off"></div>
+  <button class="btn-r" onclick="resetF()">✕ Limpiar filtros</button>
+</div>
+<div class="ib">
+  <span>Mostrando <strong id="cs">0</strong> de <strong id="ct">0</strong> SKUs</span>
+  <span id="tq">Total: <strong>0</strong> uds.</span>
+</div>
+
+<div class="tw">
+  <table>
+    <thead><tr>
+      <th class="ns">Foto</th>
+      <th onclick="sortBy(0)">Cliente</th>
+      <th onclick="sortBy(1)">Dpto.</th>
+      <th onclick="sortBy(2)">Modelo</th>
+      <th onclick="sortBy(3)">Descripcion</th>
+      <th onclick="sortBy(4)">Temporada</th>
+      <th onclick="sortBy(5)">Marca</th>
+      <th onclick="sortBy(6)" style="text-align:center">Cant.</th>
+    </tr></thead>
+    <tbody id="tb"></tbody>
+  </table>
+  <div class="msg" id="cargando">Cargando datos…</div>
+  <div class="nr" id="nr" style="display:none">Sin resultados.</div>
+</div>
+<div class="pag" id="pg"></div>
+<div class="lb" id="lb" onclick="closeLB()"><span class="lbx" onclick="closeLB()">&times;</span><img id="lbimg" src="" alt="" onclick="event.stopPropagation()"></div>
+
+<script>
+// ---------- datos: se descargan desde data/ (publicado por cargar.html) ----------
+// Estructura interna, la misma del archivo original:
+//   RAW[i] = [cliente, depto, modelo, descripcion, temporada, marca, cantidad, foto, supervisores[], tiendas[], {tienda: cantidad}]
+//   (cliente, depto, temporada, marca, supervisores y tiendas son índices en C, D, T, M, S y TI)
+//   SM["cliente_depto_tienda"] = índice del supervisor de esa tienda
+var C=[], D=[], T=[], M=[], S=[], TI=[], RAW=[], SM={}, IMGS={};
+var IMG='https://drive.google.com/thumbnail?id=';
+var PS=50, CP=1, SC=-1, SD=1, AT=-1, SI=-1;
+var F=[];
+var BGCLS={'Falabella':'bf','Ripley':'br','Paris':'bp','ABC':'ba','La Polar':'bl','Hites':'bh'};
+var ORDEN_CLIENTES=['Falabella','La Polar','Paris','Ripley','Hites'];
+
+function fechaCorta(iso){ if(!iso) return ''; var d=new Date(iso); return d.toLocaleDateString('es-CL',{day:'2-digit',month:'2-digit',year:'numeric'}); }
+
+async function cargar(){
+  var r=await fetch('data/manifiesto.json?t='+Date.now());
+  if(!r.ok) throw new Error('No encuentro data/manifiesto.json');
+  var man=await r.json();
+  var claves=Object.keys(man.clientes||{});
+  if(!claves.length) throw new Error('Todavía no hay levantamientos cargados. Súbelos desde cargar.html.');
+  var pedidos=claves.map(function(k){ return fetch('data/clientes/'+k+'.json?v='+encodeURIComponent(man.clientes[k].subido||'')).then(function(x){ if(!x.ok) throw new Error('Falta data/clientes/'+k+'.json'); return x.json(); }); });
+  if(man.imagenes) pedidos.push(fetch('data/imagenes.json?v='+encodeURIComponent(man.imagenes.subido||'')).then(function(x){ return x.ok?x.json():{img:{}}; }).then(function(j){ IMGS=j.img||{}; }));
+  var clientes=(await Promise.all(pedidos)).filter(function(j){ return j && j.filas; });
+  clientes.sort(function(a,b){ var ia=ORDEN_CLIENTES.indexOf(a.cliente), ib=ORDEN_CLIENTES.indexOf(b.cliente); return (ia<0?99:ia)-(ib<0?99:ib) || a.cliente.localeCompare(b.cliente); });
+  construir(clientes, man);
+}
+
+// arma C/D/T/M/S/TI/RAW/SM a partir de los JSON por cliente
+function construir(clientes, man){
+  var idx=function(lista, mapa, v){ if(mapa[v]===undefined){ mapa[v]=lista.length; lista.push(v); } return mapa[v]; };
+  var mD={}, mT={}, mM={}, mS={}, mTI={};
+  var dep=[], tem=[], mar=[], sup=[], tie=[];
+  // listas ordenadas alfabéticamente, como el archivo original
+  clientes.forEach(function(c){
+    c.filas.forEach(function(f){ idx(dep,mD,f.d); idx(tem,mT,f.t); idx(mar,mM,f.b); });
+    c.tiendas.forEach(function(t){ idx(sup,mS,t.sup); idx(tie,mTI,t.nombre); });
+  });
+  var ordenar=function(lista, mapa){ lista.sort(function(a,b){ return a.localeCompare(b,'es',{numeric:false}); }); lista.forEach(function(v,i){ mapa[v]=i; }); };
+  ordenar(dep,mD); ordenar(tem,mT); ordenar(mar,mM); ordenar(sup,mS); ordenar(tie,mTI);
+  D=dep; T=tem; M=mar; S=sup; TI=tie;
+  C=clientes.map(function(c){ return c.cliente; });
+  RAW=[]; SM={};
+  clientes.forEach(function(c, ci){
+    var porCod={};
+    c.tiendas.forEach(function(t){ porCod[t.cod]={ ti:mTI[t.nombre], si:mS[t.sup] }; });
+    var deptos={};
+    c.filas.forEach(function(f){ deptos[mD[f.d]]=1; });
+    Object.keys(deptos).forEach(function(di){ c.tiendas.forEach(function(t){ var p=porCod[t.cod]; SM[ci+'_'+di+'_'+p.ti]=p.si; }); });
+    c.filas.forEach(function(f){
+      var tiendas=[], sups={}, det={};
+      Object.keys(f.s).forEach(function(cod){ var p=porCod[cod]; if(!p) return; tiendas.push(p.ti); det[String(p.ti)]=f.s[cod]; sups[p.si]=1; });
+      tiendas.sort(function(a,b){return a-b;});
+      var img=IMGS[f.m.toUpperCase()]||'';
+      RAW.push([ci, mD[f.d], f.m, f.n, mT[f.t], mM[f.b], f.q, img, Object.keys(sups).map(Number).sort(function(a,b){return a-b;}), tiendas, det]);
+    });
+  });
+  F=RAW.slice();
+  // línea de resumen: semana del Excel y fecha de carga por cliente
+  var h=clientes.map(function(c){
+    var sem={}; c.hojas.forEach(function(x){ var s=(x.semana||'').split('|')[0].trim(); if(s) sem[s]=1; });
+    var reg=(man.clientes||{})[c.clave]||{};
+    return '<span>'+badgeFor(c.cliente)+' '+Object.keys(sem).join(', ')+(reg.subido?' · cargado '+fechaCorta(reg.subido):'')+'</span>';
+  }).join('');
+  document.getElementById('meta').innerHTML=h+'<a href="cargar.html">cargar levantamiento</a>';
+  document.getElementById('cargando').style.display='none';
+  initFiltros();
+  render();
+}
+
+function supOf(ci,di,ti){
+  var v=SM[ci+'_'+di+'_'+ti];
+  return v===undefined?-1:v;
+}
+function rowHasSup(r,si){
+  for(var i=0;i<r[9].length;i++){ if(supOf(r[0],r[1],r[9][i])===si) return true; }
+  return false;
+}
+function badgeFor(name){return '<span class="bc '+(BGCLS[name]||'bf')+'">'+name+'</span>';}
+
+function openLB(id){
+  if(!id) return;
+  document.getElementById('lbimg').src=IMG+id+'&sz=w1000';
+  document.getElementById('lb').classList.add('open');
+}
+function closeLB(){
+  document.getElementById('lb').classList.remove('open');
+  document.getElementById('lbimg').src='';
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape') closeLB();});
+
+function gi(id){return parseInt(document.getElementById(id).value);}
+
+function setSelect(id, idxArr, lookup, ph, keepVal){
+  var h='<option value="-1">'+ph+'</option>';
+  idxArr.forEach(function(i){h+='<option value="'+i+'">'+lookup[i]+'</option>';});
+  var el=document.getElementById(id);
+  el.innerHTML=h;
+  if(keepVal>=0 && idxArr.indexOf(keepVal)>=0) el.value=keepVal;
+}
+
+// supervisores disponibles según cliente y departamento (por las tiendas que realmente tienen)
+function availSups(ci,di){
+  var set={};
+  RAW.forEach(function(r){
+    if((ci<0||r[0]===ci)&&(di<0||r[1]===di)){
+      r[9].forEach(function(t){
+        var s=supOf(r[0],r[1],t);
+        if(s>=0) set[s]=1;
+      });
+    }
+  });
+  return Object.keys(set).map(Number).sort(function(a,b){return a-b;});
+}
+
+// tiendas disponibles según cliente, departamento y supervisor
+function availTiendas(ci,di,si){
+  var set={};
+  RAW.forEach(function(r){
+    if((ci<0||r[0]===ci)&&(di<0||r[1]===di)){
+      r[9].forEach(function(t){
+        if(si<0 || supOf(r[0],r[1],t)===si) set[t]=1;
+      });
+    }
+  });
+  return Object.keys(set).map(Number).sort(function(a,b){return a-b;});
+}
+
+function refreshDropdowns(keepSup, keepTienda){
+  var ci=gi('fc'), di=gi('fd');
+  var si=keepSup!==undefined?keepSup:gi('fs');
+  var supsAv=availSups(ci,di);
+  setSelect('fs',supsAv,S,'Todos',si>=0&&supsAv.indexOf(si)>=0?si:-1);
+  var si2=gi('fs');
+  var tiAv=availTiendas(ci,di,si2);
+  var curTi=keepTienda!==undefined?keepTienda:gi('ft');
+  setSelect('ft',tiAv,TI,'Todas',curTi>=0&&tiAv.indexOf(curTi)>=0?curTi:-1);
+}
+
+function getQ(r){
+  if(AT>=0 && r[10][String(AT)]!==undefined) return r[10][String(AT)];
+  if(SI>=0){
+    var tot=0;
+    r[9].forEach(function(t){
+      if(supOf(r[0],r[1],t)===SI) tot+=(r[10][String(t)]||0);
+    });
+    return tot;
+  }
+  return r[6];
+}
+
+function applyF(){
+  var ci=gi('fc'), di=gi('fd'), si=gi('fs'), q=document.getElementById('fq').value.toLowerCase();
+  AT=gi('ft'); SI=si;
+  F=RAW.filter(function(r){
+    return (ci<0||r[0]===ci)&&(di<0||r[1]===di)&&(si<0||rowHasSup(r,si))
+          &&(AT<0||r[9].indexOf(AT)>=0)&&(!q||r[2].toLowerCase().indexOf(q)>=0||r[3].toLowerCase().indexOf(q)>=0);
+  });
+  if(SC>=0) doSort(SC);
+  CP=1; render();
+}
+
+function initFiltros(){
+  var allC=C.map(function(_,i){return i;}), allD=D.map(function(_,i){return i;});
+  setSelect('fc',allC,C,'Todos',-1); setSelect('fd',allD,D,'Todos',-1);
+  var allS=S.map(function(_,i){return i;}); setSelect('fs',allS,S,'Todos',-1);
+  var allT=TI.map(function(_,i){return i;}); setSelect('ft',allT,TI,'Todas',-1);
+}
+
+document.getElementById('fc').addEventListener('change',function(){refreshDropdowns(-1,-1);applyF();});
+document.getElementById('fd').addEventListener('change',function(){refreshDropdowns(gi('fs'),gi('ft'));applyF();});
+document.getElementById('fs').addEventListener('change',function(){
+  var ci=gi('fc'),di=gi('fd'),si=gi('fs'),tiAv=availTiendas(ci,di,si),cur=gi('ft');
+  setSelect('ft',tiAv,TI,'Todas',tiAv.indexOf(cur)>=0?cur:-1);
+  applyF();
+});
+document.getElementById('ft').addEventListener('change',applyF);
+document.getElementById('fq').addEventListener('input',applyF);
+
+function sortBy(col){
+  document.querySelectorAll('th').forEach(function(t){if(!t.classList.contains('ns'))t.className='';});
+  if(SC===col) SD*=-1; else{SC=col;SD=1;}
+  document.querySelectorAll('th')[col+1].className=SD===1?'sa':'sd';
+  doSort(col); render();
+}
+function doSort(col){
+  F.sort(function(a,b){
+    var va,vb;
+    if(col===0){va=C[a[0]];vb=C[b[0]];}
+    else if(col===1){va=D[a[1]];vb=D[b[1]];}
+    else if(col===4){va=T[a[4]];vb=T[b[4]];}
+    else if(col===5){va=M[a[5]];vb=M[b[5]];}
+    else if(col===6){va=getQ(a);vb=getQ(b);}
+    else{va=a[col];vb=b[col];}
+    if(typeof va==='number') return (va-vb)*SD;
+    return String(va).localeCompare(String(vb))*SD;
+  });
+}
+
+function render(){
+  var st=(CP-1)*PS, pg=F.slice(st,st+PS);
+  document.getElementById('cs').textContent=F.length;
+  document.getElementById('ct').textContent=RAW.length;
+  var tot=F.reduce(function(s,r){return s+getQ(r);},0);
+  document.getElementById('tq').innerHTML='Total: <strong>'+tot.toLocaleString()+'</strong> uds.';
+  if(F.length===0){
+    document.getElementById('tb').innerHTML='';
+    document.getElementById('nr').style.display='block';
+  } else {
+    document.getElementById('nr').style.display='none';
+    document.getElementById('tb').innerHTML=pg.map(function(r){
+      var img=r[7]?'<img src="'+IMG+r[7]+'&sz=w80" loading="lazy" onclick="openLB(\''+r[7]+'\')">':'';
+      return '<tr><td class="tc">'+img+'</td><td>'+badgeFor(C[r[0]])+'</td><td>'
+        +D[r[1]]+'</td><td><strong>'+r[2]+'</strong></td><td>'+r[3]+'</td><td>'
+        +T[r[4]]+'</td><td>'+M[r[5]]+'</td><td style="text-align:center"><span class="qty">'
+        +getQ(r)+'</span></td></tr>';
+    }).join('');
+  }
+  renderPag();
+}
+
+function renderPag(){
+  var total=Math.ceil(F.length/PS), p=document.getElementById('pg');
+  if(total<=1){p.innerHTML='';return;}
+  var h='<button onclick="goP('+(CP-1)+')" '+(CP===1?'disabled':'')+'>&#8249;</button>', rng=[];
+  for(var i=1;i<=total;i++){
+    if(i===1||i===total||(i>=CP-1&&i<=CP+1)) rng.push(i);
+    else if(rng[rng.length-1]!=='...') rng.push('...');
+  }
+  rng.forEach(function(x){
+    if(x==='...') h+='<span class="pi">…</span>';
+    else h+='<button class="'+(x===CP?'act':'')+'" onclick="goP('+x+')">'+x+'</button>';
+  });
+  h+='<button onclick="goP('+(CP+1)+')" '+(CP===total?'disabled':'')+'>&#8250;</button>';
+  h+='<span class="pi"> '+CP+'/'+total+'</span>';
+  p.innerHTML=h;
+}
+
+function goP(p){
+  var total=Math.ceil(F.length/PS);
+  if(p<1||p>total) return;
+  CP=p; render(); window.scrollTo(0,0);
+}
+
+function resetF(){
+  ['fc','fd','fs','ft'].forEach(function(id){document.getElementById(id).value='-1';});
+  var allS=S.map(function(_,i){return i;}); setSelect('fs',allS,S,'Todos',-1);
+  var allT=TI.map(function(_,i){return i;}); setSelect('ft',allT,TI,'Todas',-1);
+  document.getElementById('fq').value='';
+  AT=-1; SI=-1; F=RAW.slice(); SC=-1; SD=1;
+  document.querySelectorAll('th').forEach(function(t){if(!t.classList.contains('ns'))t.className='';});
+  CP=1; render();
+}
+
+cargar().catch(function(e){
+  var m=document.getElementById('cargando'); m.className='msg err'; m.textContent='No pude cargar los datos: '+e.message;
+  document.getElementById('meta').innerHTML='<a href="cargar.html">cargar levantamiento</a>';
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cargar levantamiento</title>
+<style>
+  :root { --bg:#0f1115; --card:#181b22; --card2:#20242d; --text:#e8eaee; --muted:#9aa3ad; --line:#2a3039; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444; --accent:#1a3a6b; --accent2:#2d6a9f; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--text); padding:28px 16px 60px; }
+  main { max-width:960px; margin:0 auto; }
+  h1 { font-size:1.5rem; margin:0 0 4px; }
+  .lead { color:var(--muted); margin:0 0 22px; }
+  a { color:#8ec5ff; }
+  .box { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px 20px; margin-bottom:16px; }
+  .box h2 { font-size:1rem; margin:0 0 12px; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  input[type=password], input[type=text] { flex:1; min-width:220px; background:#0b0d11; color:var(--text); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:.95rem; }
+  button { background:var(--accent2); color:#fff; border:0; border-radius:8px; padding:10px 16px; font-weight:600; cursor:pointer; font-size:.92rem; }
+  button.sec { background:var(--card2); color:var(--text); border:1px solid var(--line); }
+  button:disabled { opacity:.45; cursor:default; }
+  .drop { border:2px dashed #3a4150; border-radius:12px; padding:34px 20px; text-align:center; color:var(--muted); transition:.15s; cursor:pointer; }
+  .drop.over { border-color:var(--accent2); color:var(--text); background:#171c25; }
+  .drop b { color:var(--text); }
+  .btnfile { display:inline-block; background:var(--accent2); color:#fff; border-radius:8px; padding:10px 18px; font-weight:600; cursor:pointer; font-size:.92rem; }
+  #file { position:absolute; width:1px; height:1px; opacity:0; overflow:hidden; }
+  .names { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:6px 18px; margin-top:12px; font-size:.86rem; color:var(--muted); }
+  .names code { color:var(--text); background:#0b0d11; padding:2px 6px; border-radius:4px; }
+  .card { background:var(--card2); border:1px solid var(--line); border-radius:10px; padding:14px 16px; margin-top:12px; }
+  .card .hd { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; flex-wrap:wrap; }
+  .card .name { font-weight:600; word-break:break-all; }
+  .tag { display:inline-block; font-size:.75rem; padding:3px 9px; border-radius:999px; background:#2c3340; color:var(--text); margin-left:6px; vertical-align:middle; }
+  .tag.w { background:#1f3350; color:#8ec5ff; }
+  .st { margin-top:8px; font-size:.9rem; color:var(--muted); }
+  .st.ok { color:var(--ok); } .st.bad { color:var(--bad); white-space:pre-wrap; } .st.warn { color:var(--warn); }
+  table { border-collapse:collapse; width:100%; margin-top:10px; font-size:.86rem; }
+  th, td { text-align:left; padding:5px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:500; }
+  td.n, th.n { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .acts { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; align-items:center; }
+  .bar { height:4px; background:#2c3340; border-radius:2px; overflow:hidden; margin-top:10px; }
+  .bar i { display:block; height:100%; width:30%; background:var(--accent2); animation:slide 1.2s infinite; }
+  @keyframes slide { 0%{transform:translateX(-100%)} 100%{transform:translateX(400%)} }
+  .small { font-size:.82rem; color:var(--muted); }
+  .aviso { color:var(--warn); }
+  details summary { cursor:pointer; color:var(--muted); font-size:.86rem; }
+  ol { padding-left:20px; } li { margin:4px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Cargar levantamiento</h1>
+  <p class="lead">Adjunta el Excel de cada cliente (uno por archivo). La app valida el nombre y la estructura, lo convierte y lo sube a GitHub. El <a href="index.html">dashboard</a> toma el levantamiento nuevo automáticamente. También acepta <code>Excel_Macro.xlsx</code> para actualizar las fotos.</p>
+
+  <div class="box">
+    <h2>1 · Conexión con GitHub</h2>
+    <div class="row">
+      <input type="password" id="token" placeholder="Token de GitHub (github_pat_…)" autocomplete="off">
+      <button id="btnToken">Guardar y probar</button>
+    </div>
+    <div class="st" id="tokenSt">Repositorio: <code id="repoName"></code></div>
+    <details style="margin-top:10px">
+      <summary>¿Cómo creo el token?</summary>
+      <ol class="small">
+        <li>Entra a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a></li>
+        <li><b>Token name:</b> <code>cargar levantamientos</code> · <b>Expiration:</b> 1 año (o "No expiration")</li>
+        <li><b>Repository access:</b> "Only select repositories" → elige <code>levantamientos</code></li>
+        <li><b>Permissions → Repository permissions → Contents:</b> <b>Read and write</b> (nada más)</li>
+        <li>Generate token → cópialo y pégalo arriba. Queda guardado solo en este navegador.</li>
+      </ol>
+      <p class="small">Si ya tienes el token de <code>pagina-web</code>, puedes editarlo en GitHub y agregarle este repositorio en "Repository access".</p>
+    </details>
+  </div>
+
+  <div class="box">
+    <h2>2 · Levantamientos publicados</h2>
+    <div id="estado" class="small">Cargando…</div>
+  </div>
+
+  <div class="box">
+    <h2>3 · Adjuntar archivos</h2>
+    <div class="drop" id="drop">Arrastra aquí los Excel <b>o la carpeta completa</b><br><span class="small">Se aceptan varios a la vez; se procesan de a uno.</span>
+      <div style="margin-top:14px"><label for="file" class="btnfile">Elegir archivos…</label></div>
+      <input type="file" id="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple>
+    </div>
+    <div class="names" id="names"></div>
+    <div id="cards"></div>
+  </div>
+</main>
+
+<script src="js/convertir.js"></script>
+<script>
+const OWNER = 'jmunozjm93-blip', REPO = 'levantamientos', BRANCH = 'main';
+const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
+const el = id => document.getElementById(id);
+const fmt = n => n == null ? '–' : Number(n).toLocaleString('es-CL');
+const fecha = iso => iso ? new Date(iso).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+el('repoName').textContent = `${OWNER}/${REPO}`;
+el('names').innerHTML = Convertir.TIPOS.map(t => `<div>${t.nombre}: <code>${t.etiqueta}</code></div>`).join('');
+
+// ---------- GitHub ----------
+const token = () => localStorage.getItem('gh_token') || '';
+el('token').value = token();
+async function gh(path, opts = {}) {
+  // cache: no-store → GitHub manda max-age=60 y el navegador devolvía listas viejas (sha desactualizado)
+  const r = await fetch(API + path, Object.assign({ cache: 'no-store', headers: { Authorization: 'Bearer ' + token(), Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' } }, opts));
+  if (r.status === 404) return null;
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(`GitHub ${r.status}: ${j.message || r.statusText}`);
+  return j;
+}
+const b64 = s => { const bytes = new TextEncoder().encode(s); let bin = ''; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(bin); };
+const unb64 = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\n/g, '')), c => c.charCodeAt(0)));
+async function shaDe(path) {
+  // el árbol completo trae el sha de cualquier archivo, sin importar su tamaño
+  const t = await gh(`/git/trees/${BRANCH}?recursive=1`);
+  const e = t && t.tree.find(x => x.path === path);
+  return e ? e.sha : null;
+}
+async function subir(path, texto, mensaje) {
+  let sha = await shaDe(path);
+  for (let intento = 1; ; intento++) {
+    const body = { message: mensaje, content: b64(texto), branch: BRANCH };
+    if (sha) body.sha = sha;
+    try {
+      const r = await gh(`/contents/${path}`, { method: 'PUT', body: JSON.stringify(body) });
+      return r.commit;
+    } catch (e) {
+      // el archivo cambió entre la lectura y la escritura (o ya existía): se relee el sha y se reintenta
+      if (intento < 5 && /GitHub (409|422)/.test(e.message)) { await new Promise(r => setTimeout(r, 800 * intento)); sha = await shaDe(path); continue; }
+      throw e;
+    }
+  }
+}
+// las subidas van de a una: dos a la vez chocan al actualizar manifiesto.json
+let colaSubida = Promise.resolve();
+const enCola = fn => { const p = colaSubida.then(fn, fn); colaSubida = p.catch(() => {}); return p; };
+async function leerManifiesto() {
+  const r = await gh(`/contents/data/manifiesto.json?ref=${BRANCH}`);
+  if (!r) return { clientes: {} };
+  try { return JSON.parse(unb64(r.content)); } catch (e) { return { clientes: {} }; }
+}
+async function registrar(info, resumen) {
+  const m = await leerManifiesto();
+  m.clientes = m.clientes || {};
+  const ahora = new Date().toISOString();
+  if (info.tipo === 'imagenes') {
+    m.imagenes = { subido: ahora, modelos: resumen.modelos };
+  } else {
+    m.clientes[info.clave] = { nombre: info.nombre, subido: ahora, skus: resumen.skus, uds: resumen.uds, tiendas: resumen.tiendas,
+      hojas: resumen.hojas.map(h => ({ depto: h.depto, semana: h.semana, modelos: h.modelos, uds: h.uds })) };
+  }
+  m.actualizado = ahora;
+  await subir('data/manifiesto.json', JSON.stringify(m, null, 1), `Registra ${info.nombre}`);
+  return m;
+}
+
+el('btnToken').onclick = async () => {
+  localStorage.setItem('gh_token', el('token').value.trim());
+  el('tokenSt').className = 'st'; el('tokenSt').textContent = 'Probando…';
+  try {
+    const r = await gh('');
+    const p = r && r.permissions;
+    if (!p || !p.push) throw new Error('El token no tiene permiso de escritura (Contents: Read and write) sobre el repositorio');
+    el('tokenSt').className = 'st ok'; el('tokenSt').textContent = `✓ Conectado a ${r.full_name} con permiso de escritura`;
+    cargarEstado();
+  } catch (e) { el('tokenSt').className = 'st bad'; el('tokenSt').textContent = '✗ ' + e.message; }
+};
+
+// ---------- estado ----------
+async function cargarEstado() {
+  try {
+    let m;
+    if (token()) m = await leerManifiesto();
+    else { const r = await fetch('data/manifiesto.json?t=' + Date.now()); m = r.ok ? await r.json() : { clientes: {} }; }
+    const cl = m.clientes || {};
+    let h = `<table><tr><th>Cliente</th><th>Semana del Excel</th><th>Subido</th><th class="n">Departamentos</th><th class="n">SKUs</th><th class="n">Unidades</th></tr>`;
+    for (const c of Convertir.CLIENTES) {
+      const e = cl[c.clave];
+      if (!e) { h += `<tr><td>${c.nombre}</td><td colspan="5" class="small">— sin cargar —</td></tr>`; continue; }
+      const semanas = [...new Set((e.hojas || []).map(x => (x.semana || '').split('|')[0].trim()))].join(', ');
+      h += `<tr><td>${esc(e.nombre)}</td><td>${esc(semanas || '—')}</td><td>${fecha(e.subido)}</td><td class="n">${(e.hojas || []).length}</td><td class="n">${fmt(e.skus)}</td><td class="n">${fmt(e.uds)}</td></tr>`;
+    }
+    h += `<tr><td>Fotos (Excel_Macro)</td><td colspan="2">${m.imagenes ? fecha(m.imagenes.subido) : '<span class="small">— sin cargar —</span>'}</td><td class="n" colspan="3">${m.imagenes ? fmt(m.imagenes.modelos) + ' modelos' : ''}</td></tr></table>`;
+    el('estado').innerHTML = h;
+  } catch (e) { el('estado').textContent = 'No pude leer el estado: ' + e.message; }
+}
+cargarEstado();
+
+// ---------- archivos ----------
+const worker = new Worker('js/worker-convertir.js');
+const pend = {};
+worker.onmessage = e => { const h = pend[e.data.id]; if (h) h(e.data); };
+let seq = 0;
+const cola = []; let ocupado = false;
+
+function tarjeta(file, info) {
+  const c = document.createElement('div'); c.className = 'card';
+  c.innerHTML = `<div class="hd"><div class="name">${esc(file.name)} <span class="small">(${(file.size / 1048576).toFixed(1)} MB)</span></div>
+    <div>${info ? `<span class="tag w">${esc(info.nombre)}</span>` : ''}</div></div>
+    <div class="st" data-st></div><div data-body></div><div class="acts" data-acts></div>`;
+  el('cards').prepend(c);
+  return c;
+}
+const setSt = (c, cls, msg) => { const s = c.querySelector('[data-st]'); s.className = 'st ' + cls; s.textContent = msg; };
+
+function tablaResumen(r) {
+  if (r.tipo === 'imagenes') return `<table><tr><th class="n">Filas con link</th><th class="n">Modelos con foto</th></tr><tr><td class="n">${fmt(r.filasExcel)}</td><td class="n">${fmt(r.modelos)}</td></tr></table>`;
+  let h = `<table><tr><th>Hoja</th><th>Departamento</th><th>Semana</th><th class="n">Modelos</th><th class="n">Unidades</th><th class="n">Total general Excel</th><th>Sucursales</th></tr>`;
+  for (const x of r.hojas) {
+    const sin = x.sinSupervisor.length ? `<div class="small aviso">${x.sinSupervisor.length} sin supervisor (no se cuentan): ${esc(x.sinSupervisor.join(', '))}</div>` : '';
+    const om = x.omitidos ? `<div class="small">${x.omitidos} modelos sin unidades omitidos</div>` : '';
+    h += `<tr><td>${esc(x.hoja)}</td><td>${esc(x.depto)}</td><td>${esc(x.semana)}</td><td class="n">${fmt(x.modelos)}${om}</td><td class="n">${fmt(x.uds)}</td><td class="n">${fmt(x.totalExcel)}</td><td>${x.sucursales - x.sinSupervisor.length} de ${x.sucursales}${sin}</td></tr>`;
+  }
+  h += `<tr><th colspan="3">Total · ${r.tiendas} tiendas con ${r.supervisores} supervisores (hoja "${esc(r.hojaSupervisores)}")</th><th class="n">${fmt(r.skus)}</th><th class="n">${fmt(r.uds)}</th><th colspan="2"></th></tr></table>`;
+  if (r.omitidas.length) h += `<div class="small" style="margin-top:6px">Hojas omitidas por ser copia resumen: ${esc(r.omitidas.join(', '))}</div>`;
+  return h;
+}
+
+function procesar(file) {
+  const info = Convertir.identificar(file.name);
+  const c = tarjeta(file, info);
+  if (!info) { setSt(c, 'bad', 'El nombre no corresponde a ningún cliente. Debe ser exactamente uno de los nombres de la lista (ej. "Levantamiento Paris.xlsx").'); return; }
+  cola.push({ file, info, c }); siguiente();
+}
+function siguiente() {
+  if (ocupado || !cola.length) return;
+  ocupado = true;
+  const { file, info, c } = cola.shift();
+  const id = ++seq;
+  setSt(c, '', 'Leyendo el archivo…');
+  c.querySelector('[data-body]').innerHTML = '<div class="bar"><i></i></div>';
+  const fin = () => { ocupado = false; siguiente(); };
+  pend[id] = msg => {
+    if (msg.etapa === 'leyendo') return;
+    if (msg.etapa === 'convirtiendo') { setSt(c, '', `Convirtiendo… hojas: ${msg.hojas.join(' · ')}`); return; }
+    delete pend[id];
+    c.querySelector('[data-body]').innerHTML = '';
+    if (msg.etapa === 'error') { setSt(c, 'bad', '✗ ' + msg.error); fin(); return; }
+    setSt(c, 'ok', `✓ Válido · leído en ${(msg.ms.lectura / 1000).toFixed(1)} s · JSON de ${(msg.texto.length / 1024).toFixed(0)} KB`);
+    c.querySelector('[data-body]').innerHTML = tablaResumen(msg.resumen);
+    const acts = c.querySelector('[data-acts]');
+    const bUp = document.createElement('button'); bUp.textContent = 'Subir a GitHub';
+    const bDl = document.createElement('button'); bDl.className = 'sec'; bDl.textContent = 'Descargar JSON';
+    acts.append(bUp, bDl);
+    const path = info.tipo === 'imagenes' ? 'data/imagenes.json' : `data/clientes/${info.clave}.json`;
+    bDl.onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([msg.texto], { type: 'application/json' })); a.download = path.split('/').pop(); a.click(); };
+    bUp.onclick = () => {
+      if (!token()) { setSt(c, 'bad', '✗ Primero guarda el token de GitHub (paso 1).'); return; }
+      bUp.disabled = true; setSt(c, '', 'En cola para subir…');
+      enCola(async () => {
+        setSt(c, '', 'Subiendo a GitHub…');
+        try {
+          const commit = await subir(path, msg.texto, `${info.nombre}: levantamiento (${file.name})`);
+          setSt(c, '', 'Registrando…');
+          await registrar(info, msg.resumen);
+          setSt(c, 'ok', `✓ Subido a ${path}. GitHub Pages lo publica en 1–2 minutos.`);
+          acts.innerHTML = `<a class="small" href="${commit.html_url}" target="_blank" rel="noopener">Ver commit</a>`;
+          cargarEstado();
+        } catch (e) { setSt(c, 'bad', '✗ ' + e.message); bUp.disabled = false; }
+      });
+    };
+    fin();
+  };
+  file.arrayBuffer().then(buf => worker.postMessage({ id, info, nombre: file.name, buffer: buf }, [buf]))
+    .catch(e => { delete pend[id]; setSt(c, 'bad', '✗ No pude leer el archivo: ' + e.message); fin(); });
+}
+
+const drop = el('drop');
+// clic en la zona (fuera del botón) también abre el selector
+drop.addEventListener('click', e => { if (!e.target.closest('label') && e.target.id !== 'file') el('file').click(); });
+el('file').onchange = e => { [...e.target.files].forEach(procesar); e.target.value = ''; };
+['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+// arrastre: archivos sueltos o carpetas (se recorren y se toman los .xlsx)
+function leerEntrada(entry) {
+  return new Promise(res => {
+    if (entry.isFile) entry.file(f => res([f]), () => res([]));
+    else if (entry.isDirectory) {
+      const reader = entry.createReader(), todo = [];
+      const lote = () => reader.readEntries(async ents => {
+        if (!ents.length) { res((await Promise.all(todo)).flat()); return; }
+        ents.forEach(en => todo.push(leerEntrada(en)));
+        lote();
+      }, () => res([]));
+      lote();
+    } else res([]);
+  });
+}
+drop.addEventListener('drop', async e => {
+  const items = [...(e.dataTransfer.items || [])];
+  const entries = items.map(it => it.webkitGetAsEntry && it.webkitGetAsEntry()).filter(Boolean);
+  let files = entries.length ? (await Promise.all(entries.map(leerEntrada))).flat() : [...e.dataTransfer.files];
+  const xlsx = files.filter(f => /\.xlsx$/i.test(f.name) && !/^~\$/.test(f.name));
+  if (!xlsx.length) { const c = tarjeta({ name: files.map(f => f.name).join(', ') || '(vacío)', size: 0 }, null); setSt(c, 'bad', 'No encontré archivos .xlsx en lo que arrastraste.'); return; }
+  xlsx.forEach(procesar);
+});
+</script>
+</body>
+</html>

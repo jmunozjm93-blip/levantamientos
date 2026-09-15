@@ -1,0 +1,138 @@
+{
+ "clientes": {
+  "falabella": {
+   "nombre": "Falabella",
+   "subido": "2026-09-15T21:21:26.957Z",
+   "skus": 493,
+   "uds": 32896,
+   "tiendas": 46,
+   "hojas": [
+    {
+     "depto": "Kids",
+     "semana": "2026-W34 | 17-ago. al 23-ago.",
+     "modelos": 120,
+     "uds": 5516
+    },
+    {
+     "depto": "Deporte mujer",
+     "semana": "2026-W34 | 17-ago. al 23-ago.",
+     "modelos": 78,
+     "uds": 7219
+    },
+    {
+     "depto": "Deporte hombre",
+     "semana": "2026-W34 | 17-ago. al 23-ago.",
+     "modelos": 195,
+     "uds": 11104
+    },
+    {
+     "depto": "Calzado mujer",
+     "semana": "2026-W34 | 17-ago. al 23-ago.",
+     "modelos": 100,
+     "uds": 9057
+    }
+   ]
+  },
+  "paris": {
+   "nombre": "Paris",
+   "subido": "2026-09-15T21:21:27.082Z",
+   "skus": 625,
+   "uds": 53545,
+   "tiendas": 50,
+   "hojas": [
+    {
+     "depto": "Calzado mujer",
+     "semana": "2026-W34 | 17-ago. al 23-ago.",
+     "modelos": 99,
+     "uds": 8656
+    },
+    {
+     "depto": "Deporte",
+     "semana": "2026-W34 | 17-ago. al 23-ago.",
+     "modelos": 207,
+     "uds": 26576
+    },
+    {
+     "depto": "Juvenil",
+     "semana": "2026-W34 | 17-ago. al 23-ago.",
+     "modelos": 183,
+     "uds": 7749
+    },
+    {
+     "depto": "Kids",
+     "semana": "2026-W34 | 17-ago. al 23-ago.",
+     "modelos": 136,
+     "uds": 10564
+    }
+   ]
+  },
+  "ripley": {
+   "nombre": "Ripley",
+   "subido": "2026-09-15T21:21:27.147Z",
+   "skus": 260,
+   "uds": 15237,
+   "tiendas": 46,
+   "hojas": [
+    {
+     "depto": "Deporte",
+     "semana": "2026-W34 | 17-ago. al 23-ago.",
+     "modelos": 1,
+     "uds": 624
+    },
+    {
+     "depto": "Calzado mujer",
+     "semana": "2026-W34 | 17-ago. al 23-ago.",
+     "modelos": 59,
+     "uds": 4813
+    },
+    {
+     "depto": "Juvenil",
+     "semana": "2026-W34 | 17-ago. al 23-ago.",
+     "modelos": 108,
+     "uds": 3120
+    },
+    {
+     "depto": "Kids",
+     "semana": "2026-W34 | 17-ago. al 23-ago.",
+     "modelos": 92,
+     "uds": 6680
+    }
+   ]
+  },
+  "lapolar": {
+   "nombre": "La Polar",
+   "subido": "2026-09-15T21:21:27.172Z",
+   "skus": 84,
+   "uds": 11683,
+   "tiendas": 43,
+   "hojas": [
+    {
+     "depto": "Deporte",
+     "semana": "2026-W34 | 17-ago. al 23-ago.",
+     "modelos": 84,
+     "uds": 11683
+    }
+   ]
+  },
+  "hites": {
+   "nombre": "Hites",
+   "subido": "2026-09-15T21:21:27.191Z",
+   "skus": 46,
+   "uds": 52523,
+   "tiendas": 30,
+   "hojas": [
+    {
+     "depto": "Calzado",
+     "semana": "(Varios elementos)",
+     "modelos": 46,
+     "uds": 52523
+    }
+   ]
+  }
+ },
+ "actualizado": "2026-09-15T21:21:28.352Z",
+ "imagenes": {
+  "subido": "2026-09-15T21:21:28.352Z",
+  "modelos": 45486
+ }
+}
