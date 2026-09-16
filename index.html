@@ -78,11 +78,6 @@ button,select,input{font-family:inherit;}
 .kpi.main{background:linear-gradient(135deg,#1a3a6b,#2d6a9f);border-color:transparent;}
 .kpi.main .l,.kpi.main .s{color:rgba(255,255,255,.75);}
 .kpi.main .v{color:#fff;}
-.pc{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
-.pc:empty{display:none;}
-.pc .cc{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px 5px 6px;font-size:.8rem;box-shadow:var(--sombra);}
-.pc .cc b{font-variant-numeric:tabular-nums;}
-.pc .cc small{color:var(--muted);}
 
 /* ---------- etiquetas de cliente ---------- */
 .bc{display:inline-block;padding:3px 9px;border-radius:999px;font-size:.7rem;font-weight:700;white-space:nowrap;letter-spacing:.01em;}
@@ -202,8 +197,6 @@ tbody tr,.card{cursor:pointer;}
   .kpis{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;}
   .kpi{padding:10px 12px;}
   .kpi .v{font-size:1.35rem;}
-  .pc{gap:6px;margin-bottom:10px;}
-  .pc .cc{font-size:.74rem;padding:4px 10px 4px 5px;}
   .tbar{padding:10px 12px;}
   .fo{display:inline-block;font-size:.8rem;padding:6px 28px 6px 8px;border:1.5px solid var(--line2);border-radius:8px;background:var(--input);color:var(--azul);max-width:60%;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 14px) 55%,calc(100% - 9px) 55%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;}
   .tw{display:none;}
@@ -247,7 +240,6 @@ tbody tr,.card{cursor:pointer;}
     <div class="panel kpi"><span class="l">Tiendas</span><span class="v" id="kTie">0</span><span class="s" id="kTieS">&nbsp;</span></div>
     <div class="panel kpi"><span class="l">Marcas</span><span class="v" id="kMar">0</span><span class="s" id="kMarS">&nbsp;</span></div>
   </section>
-  <div class="pc" id="pc"></div>
 
   <section class="panel tabla">
     <div class="tbar"><span id="tinfo">Cargando…</span>
@@ -565,13 +557,12 @@ function doSort(col){
   });
 }
 
-// indicadores de lo filtrado: unidades, SKUs, tiendas con stock y marcas; más el desglose por cliente
+// indicadores de lo filtrado: unidades, SKUs, tiendas con stock y marcas
 function renderKpis(tot){
-  var tiendas={}, marcas={}, porCli={}, maxQ=0;
+  var tiendas={}, marcas={}, maxQ=0;
   F.forEach(function(r){
     var q=getQ(r); if(q>maxQ) maxQ=q;
     marcas[r[5]]=1;
-    porCli[r[0]]=(porCli[r[0]]||0)+q;
     r[9].forEach(function(t){ if((AT<0||t===AT)&&(SI<0||supOf(r[0],r[1],t)===SI)) tiendas[t]=1; });
   });
   var nT=Object.keys(tiendas).length, nM=Object.keys(marcas).length;
@@ -583,8 +574,6 @@ function renderKpis(tot){
   document.getElementById('kTieS').textContent=nT===1?TI[Object.keys(tiendas)[0]]:'con stock';
   document.getElementById('kMar').textContent=fmt(nM);
   document.getElementById('kMarS').textContent=nM<=3&&nM>0?Object.keys(marcas).map(function(i){return M[i];}).join(' · '):' ';
-  var cli=Object.keys(porCli).map(Number).sort(function(a,b){return a-b;}).filter(function(ci){return porCli[ci]>0;});
-  document.getElementById('pc').innerHTML=cli.length>1?cli.map(function(ci){ return '<span class="cc">'+badgeFor(C[ci])+'<b>'+fmt(porCli[ci])+'</b><small>uds · '+Math.round(porCli[ci]/tot*100)+'%</small></span>'; }).join(''):'';
   return maxQ;
 }
 
