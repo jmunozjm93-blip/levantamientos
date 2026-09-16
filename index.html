@@ -63,7 +63,7 @@ button,select,input{font-family:inherit;}
 .fhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;}
 .fhead h2{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;}
 .ftoggle{display:none;}
-.fgrid{display:grid;grid-template-columns:repeat(4,1fr) 1.4fr auto;gap:10px 12px;align-items:end;}
+.fgrid{display:grid;grid-template-columns:repeat(5,1fr) 1.4fr auto;gap:10px 12px;align-items:end;}
 .fg{display:flex;flex-direction:column;gap:5px;min-width:0;}
 .fg label{font-size:.7rem;font-weight:700;color:var(--azul);text-transform:uppercase;letter-spacing:.06em;}
 .fg select,.fg input{width:100%;padding:10px 12px;border:1.5px solid var(--line2);border-radius:10px;font-size:.92rem;background:var(--input);color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none;}
@@ -247,6 +247,7 @@ tbody tr,.card{cursor:pointer;}
       <div class="fg" id="fg-fc"><label>Cliente</label><select id="fc"></select></div>
       <div class="fg" id="fg-ft"><label>Tienda</label><select id="ft"></select></div>
       <div class="fg" id="fg-fd"><label id="lb-fd">Departamento</label><select id="fd"></select></div>
+      <div class="fg" id="fg-fm"><label>Marca</label><select id="fm"></select></div>
       <div class="fg full"><label>Buscar</label><div class="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" id="fq" placeholder="Modelo o descripción…" autocomplete="off"></div></div>
       <button class="btn-r" onclick="resetF()">✕ Limpiar</button>
     </div>
@@ -372,7 +373,7 @@ async function cargar(){
 // cada grupo puede ocultar filtros y renombrar departamentos (Steve Madden: Tipo = Zapatos / Accesorios)
 var GRUPOS={
   marcas:{},
-  steve:{ ocultar:['fc'], depto:'Tipo', renombrar:{'Calzado mujer':'Zapatos'} }
+  steve:{ ocultar:['fc','fm'], depto:'Tipo', renombrar:{'Calzado mujer':'Zapatos'} }
 };
 var TODOS=[], MAN={}, GRUPO='', RENOMBRA={};
 function nd(d){ return RENOMBRA[d]||d; }
@@ -509,9 +510,9 @@ function setSelect(id, idxArr, lookup, ph, keepVal){
 // Filtros en cascada, en este orden: Supervisor → Cliente → Tienda → Departamento.
 // Cada lista muestra solo lo que existe para lo elegido en las listas anteriores
 // (al elegir un supervisor, en Tienda quedan únicamente sus tiendas).
-var ORDEN_FILTROS=['fs','fc','ft','fd'];
-var PLACEHOLDER={fs:'Todos',fc:'Todos',ft:'Todas',fd:'Todos'};
-var NOMBRE_FILTRO={fs:'Supervisor',fc:'Cliente',ft:'Tienda',fd:'Departamento'};
+var ORDEN_FILTROS=['fs','fc','ft','fd','fm'];
+var PLACEHOLDER={fs:'Todos',fc:'Todos',ft:'Todas',fd:'Todos',fm:'Todas'};
+var NOMBRE_FILTRO={fs:'Supervisor',fc:'Cliente',ft:'Tienda',fd:'Departamento',fm:'Marca'};
 
 // opciones disponibles para la lista `id` según lo elegido en las listas que van antes
 function disponibles(id, cons){
@@ -519,12 +520,13 @@ function disponibles(id, cons){
   RAW.forEach(function(r){
     if(cons.ci>=0 && r[0]!==cons.ci) return;
     if(cons.di>=0 && r[1]!==cons.di) return;
+    if(cons.mi>=0 && r[5]!==cons.mi) return;
     r[9].forEach(function(t){
       if(cons.ti>=0 && t!==cons.ti) return;
       var s=supOf(r[0],r[1],t);
       if(s<0) return;
       if(cons.si>=0 && s!==cons.si) return;
-      set[id==='fs'?s:id==='fc'?r[0]:id==='ft'?t:r[1]]=1;
+      set[id==='fs'?s:id==='fc'?r[0]:id==='ft'?t:id==='fm'?r[5]:r[1]]=1;
     });
   });
   return Object.keys(set).map(Number).sort(function(a,b){return a-b;});
@@ -534,13 +536,13 @@ function disponibles(id, cons){
 function refreshDropdowns(desde){
   var k0=desde?ORDEN_FILTROS.indexOf(desde)+1:0;
   for(var k=k0;k<ORDEN_FILTROS.length;k++){
-    var id=ORDEN_FILTROS[k], cons={si:-1,ci:-1,ti:-1,di:-1};
+    var id=ORDEN_FILTROS[k], cons={si:-1,ci:-1,ti:-1,di:-1,mi:-1};
     for(var j=0;j<k;j++){
       var v=gi(ORDEN_FILTROS[j]);
-      if(ORDEN_FILTROS[j]==='fs') cons.si=v; else if(ORDEN_FILTROS[j]==='fc') cons.ci=v; else if(ORDEN_FILTROS[j]==='ft') cons.ti=v; else cons.di=v;
+      if(ORDEN_FILTROS[j]==='fs') cons.si=v; else if(ORDEN_FILTROS[j]==='fc') cons.ci=v; else if(ORDEN_FILTROS[j]==='ft') cons.ti=v; else if(ORDEN_FILTROS[j]==='fm') cons.mi=v; else cons.di=v;
     }
     var av=disponibles(id,cons), cur=gi(id);
-    setSelect(id,av,{fs:S,fc:C,ft:TI,fd:D}[id],PLACEHOLDER[id],av.indexOf(cur)>=0?cur:-1);
+    setSelect(id,av,{fs:S,fc:C,ft:TI,fd:D,fm:M}[id],PLACEHOLDER[id],av.indexOf(cur)>=0?cur:-1);
   }
 }
 
@@ -557,10 +559,10 @@ function getQ(r){
 }
 
 function applyF(){
-  var ci=gi('fc'), di=gi('fd'), si=gi('fs'), q=document.getElementById('fq').value.toLowerCase().trim();
+  var ci=gi('fc'), di=gi('fd'), si=gi('fs'), mi=gi('fm'), q=document.getElementById('fq').value.toLowerCase().trim();
   AT=gi('ft'); SI=si;
   F=RAW.filter(function(r){
-    return (ci<0||r[0]===ci)&&(di<0||r[1]===di)&&(si<0||rowHasSup(r,si))
+    return (ci<0||r[0]===ci)&&(di<0||r[1]===di)&&(mi<0||r[5]===mi)&&(si<0||rowHasSup(r,si))
           &&(AT<0||r[9].indexOf(AT)>=0)&&(!q||r[2].toLowerCase().indexOf(q)>=0||r[3].toLowerCase().indexOf(q)>=0);
   });
   if(SC>=0) doSort(SC);
@@ -587,7 +589,7 @@ function renderChips(){
   var h='', n=0;
   ORDEN_FILTROS.forEach(function(id){
     var v=gi(id); if(v<0) return; n++;
-    var txt={fs:S,fc:C,ft:TI,fd:D}[id][v];
+    var txt={fs:S,fc:C,ft:TI,fd:D,fm:M}[id][v];
     h+='<span class="chip"><small>'+NOMBRE_FILTRO[id]+':</small><b>'+txt+'</b><button onclick="quitar(\''+id+'\')" title="Quitar">×</button></span>';
   });
   var q=document.getElementById('fq').value.trim();
