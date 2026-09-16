@@ -136,6 +136,40 @@ tbody tr:hover td{background:var(--hover);}
 .card .cant{min-width:0;}
 .card .bar{width:56px;}
 
+/* ---------- detalle por tienda (panel al tocar un modelo) ---------- */
+tbody tr,.card{cursor:pointer;}
+.sh{display:none;position:fixed;inset:0;background:rgba(10,14,22,.55);z-index:900;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(2px);}
+.sh.open{display:flex;}
+.sheet{background:var(--card);color:var(--text);width:100%;max-width:560px;max-height:88vh;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.35);display:flex;flex-direction:column;overflow:hidden;animation:pop .18s ease-out;}
+@keyframes pop{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+.sh-h{display:flex;gap:14px;padding:16px 16px 12px;border-bottom:1px solid var(--line);align-items:flex-start;}
+.sh-h .foto{width:96px;height:96px;flex:none;border-radius:12px;}
+.sh-h .info{flex:1;min-width:0;}
+.sh-h .mod{font-size:1.15rem;white-space:normal;word-break:break-all;}
+.sh-h .desc{font-size:.85rem;margin:2px 0 8px;}
+.sh-h .tags{display:flex;flex-wrap:wrap;gap:5px;align-items:center;font-size:.74rem;color:var(--muted);}
+.sh-x{border:0;background:var(--chip);color:var(--text);width:32px;height:32px;border-radius:50%;font-size:1.3rem;line-height:32px;cursor:pointer;flex:none;padding:0;}
+.sh-x:hover{background:var(--rojo);color:#fff;}
+.sh-t{display:flex;justify-content:space-between;align-items:baseline;padding:10px 16px 6px;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:700;}
+.sh-t b{color:var(--azul);font-size:1rem;letter-spacing:0;text-transform:none;}
+.sh-b{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 8px 8px;}
+.tl{display:grid;grid-template-columns:1fr auto auto;gap:2px 12px;align-items:center;padding:9px 8px;border-radius:10px;}
+.tl:hover{background:var(--hover);}
+.tl .tn{grid-column:1;grid-row:1;font-weight:600;font-size:.88rem;}
+.tl .ts{grid-column:1;grid-row:2;font-size:.72rem;color:var(--muted);}
+.tl .bar{grid-column:2;grid-row:1/3;width:64px;}
+.tl .tq{grid-column:3;grid-row:1/3;font-weight:800;color:var(--azul);font-variant-numeric:tabular-nums;min-width:34px;text-align:right;font-size:.95rem;}
+.tl.neg .tq{color:var(--rojo);}
+.sh-f{padding:10px 16px;border-top:1px solid var(--line);font-size:.78rem;color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.sh-f b{color:var(--text);}
+@media(max-width:640px){
+  .sh{padding:0;align-items:flex-end;}
+  .sheet{max-width:none;max-height:92vh;border-radius:18px 18px 0 0;padding-bottom:env(safe-area-inset-bottom);animation:up .22s ease-out;}
+  @keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+  .sheet::before{content:"";display:block;width:40px;height:4px;border-radius:2px;background:var(--line2);margin:8px auto 0;}
+  .sh-h .foto{width:80px;height:80px;}
+}
+
 /* ---------- foto ampliada ---------- */
 .lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:999;align-items:center;justify-content:center;padding:20px;}
 .lb.open{display:flex;}
@@ -239,6 +273,12 @@ tbody tr:hover td{background:var(--hover);}
     <div class="pag" id="pg"></div>
   </section>
 </div>
+<div class="sh" id="sh" onclick="cerrarDetalle()"><div class="sheet" onclick="event.stopPropagation()">
+  <div class="sh-h" id="shH"></div>
+  <div class="sh-t"><span>Tiendas con stock</span><b id="shTot"></b></div>
+  <div class="sh-b" id="shB"></div>
+  <div class="sh-f" id="shF"></div>
+</div></div>
 <div class="lb" id="lb" onclick="closeLB()"><span class="lbx" onclick="closeLB()">&times;</span><img id="lbimg" src="" alt="" onclick="event.stopPropagation()"></div>
 
 <script>
@@ -296,7 +336,7 @@ function construir(clientes, man){
       Object.keys(f.s).forEach(function(cod){ var p=porCod[cod]; if(!p) return; tiendas.push(p.ti); det[String(p.ti)]=f.s[cod]; sups[p.si]=1; });
       tiendas.sort(function(a,b){return a-b;});
       var img=IMGS[f.m.toUpperCase()]||'';
-      RAW.push([ci, mD[f.d], f.m, f.n, mT[f.t], mM[f.b], f.q, img, Object.keys(sups).map(Number).sort(function(a,b){return a-b;}), tiendas, det]);
+      RAW.push([ci, mD[f.d], f.m, f.n, mT[f.t], mM[f.b], f.q, img, Object.keys(sups).map(Number).sort(function(a,b){return a-b;}), tiendas, det, RAW.length]);
     });
   });
   F=RAW.slice();
@@ -335,7 +375,42 @@ function closeLB(){
   document.getElementById('lb').classList.remove('open');
   document.getElementById('lbimg').src='';
 }
-document.addEventListener('keydown',function(e){if(e.key==='Escape') closeLB();});
+document.addEventListener('keydown',function(e){ if(e.key!=='Escape') return; if(document.getElementById('lb').classList.contains('open')) closeLB(); else cerrarDetalle(); });
+
+// ---------- detalle por tienda: panel con la foto grande y las tiendas del modelo ----------
+// respeta el supervisor y la tienda elegidos en los filtros (muestra solo esas tiendas)
+function abrirDetalle(i){
+  var r=RAW[i]; if(!r) return;
+  var ci=r[0], di=r[1];
+  var lista=[], sum=0;
+  r[9].forEach(function(t){
+    var s=supOf(ci,di,t);
+    if(SI>=0 && s!==SI) return;
+    if(AT>=0 && t!==AT) return;
+    var q=r[10][String(t)]||0;
+    lista.push({t:t,s:s,q:q}); sum+=q;
+  });
+  lista.sort(function(a,b){ return b.q-a.q || TI[a.t].localeCompare(TI[b.t]); });
+  var maxQ=lista.reduce(function(m,x){return Math.max(m,x.q);},0);
+  document.getElementById('shH').innerHTML=fotoDe(r,400)
+    +'<div class="info"><div class="mod">'+r[2]+'</div><div class="desc">'+r[3]+'</div>'
+    +'<div class="tags">'+badgeFor(C[ci])+'<span>'+D[di]+'</span><span>·</span><span>'+T[r[4]]+'</span><span>·</span><span>'+M[r[5]]+'</span></div></div>'
+    +'<button class="sh-x" onclick="cerrarDetalle()" title="Cerrar">×</button>';
+  document.getElementById('shTot').textContent=fmt(sum)+' uds. en '+lista.length+(lista.length===1?' tienda':' tiendas');
+  document.getElementById('shB').innerHTML=lista.length?lista.map(function(x){
+    return '<div class="tl'+(x.q<0?' neg':'')+'"><span class="tn">'+TI[x.t]+'</span><span class="bar"><i style="width:'+(maxQ>0&&x.q>0?Math.max(2,Math.round(x.q/maxQ*100)):0)+'%"></i></span><span class="tq">'+fmt(x.q)+'</span><span class="ts">'+(x.s>=0?S[x.s]:'sin supervisor')+'</span></div>';
+  }).join(''):'<div class="nr">Sin tiendas con stock para estos filtros.</div>';
+  var f=[];
+  if(sum!==r[6]) f.push('En todas sus tiendas: <b>'+fmt(r[6])+' uds.</b> en '+r[9].length);
+  if(SI>=0) f.push('Supervisor: <b>'+S[SI]+'</b>');
+  document.getElementById('shF').innerHTML=f.join('<span></span>')||'Toca la foto para ampliarla';
+  document.getElementById('sh').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function cerrarDetalle(){
+  document.getElementById('sh').classList.remove('open');
+  document.body.style.overflow='';
+}
 
 function gi(id){return parseInt(document.getElementById(id).value);}
 
@@ -497,14 +572,14 @@ function render(){
   if(F.length && MOVIL.matches){
     // celular: tarjetas (la tabla queda oculta por CSS)
     cards.innerHTML=pg.map(function(r){
-      return '<div class="card">'+fotoDe(r,160)
+      return '<div class="card" onclick="abrirDetalle('+r[11]+')">'+fotoDe(r,160)
         +'<div class="crow"><span class="mod">'+r[2]+'</span>'+cant(r)+'</div>'
         +'<div class="cdesc">'+r[3]+'</div>'
         +'<div class="cmeta">'+badgeFor(C[r[0]])+'<span>'+D[r[1]]+'</span><span>·</span><span>'+T[r[4]]+'</span><span>·</span><span>'+M[r[5]]+'</span></div></div>';
     }).join('');
   } else if(F.length){
     tb.innerHTML=pg.map(function(r){
-      return '<tr><td class="tc">'+fotoDe(r,80)+'</td><td><div class="mod">'+r[2]+'</div><div class="desc">'+r[3]+'</div></td><td>'+badgeFor(C[r[0]])+'</td><td>'
+      return '<tr onclick="abrirDetalle('+r[11]+')"><td class="tc">'+fotoDe(r,80)+'</td><td><div class="mod">'+r[2]+'</div><div class="desc">'+r[3]+'</div></td><td>'+badgeFor(C[r[0]])+'</td><td>'
         +D[r[1]]+'</td><td class="dim">'+T[r[4]]+'</td><td>'+M[r[5]]+'</td><td class="n">'+cant(r)+'</td></tr>';
     }).join('');
   }
