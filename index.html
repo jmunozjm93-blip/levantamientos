@@ -223,7 +223,7 @@ tbody tr,.card{cursor:pointer;}
   <img class="slide on" data-g="marcas" src="img/converse.jpg?v=3" alt="Converse" style="--pd:center;--pm:center">
   <img class="slide" data-g="marcas" src="img/fila.jpg?v=3" alt="Fila" loading="lazy" style="--pd:center;--pm:70% center">
   <img class="slide" data-g="marcas" src="img/umbro.jpg?v=3" alt="Umbro" loading="lazy" style="--pd:center 100%;--pm:75% 100%">
-  <img class="slide" data-g="steve" src="img/steve-madden.jpg" alt="Steve Madden" loading="lazy" style="--pd:center 88%;--pm:center 88%">
+  <img class="slide" data-g="steve" src="img/steve-madden.jpg?v=2" alt="Steve Madden" loading="lazy" style="--pd:center 45%;--pm:68% center">
   <button class="arr l" onclick="heroIr(-1)" aria-label="Anterior">&#8249;</button>
   <button class="arr r" onclick="heroIr(1)" aria-label="Siguiente">&#8250;</button>
   <div class="dots" id="dots"></div>
@@ -239,10 +239,10 @@ tbody tr,.card{cursor:pointer;}
   <section class="panel filtros" id="filtros">
     <div class="fhead"><h2>Filtros</h2></div>
     <div class="fgrid">
-      <div class="fg"><label>Supervisor</label><select id="fs"></select></div>
-      <div class="fg"><label>Cliente</label><select id="fc"></select></div>
-      <div class="fg"><label>Tienda</label><select id="ft"></select></div>
-      <div class="fg"><label>Departamento</label><select id="fd"></select></div>
+      <div class="fg" id="fg-fs"><label>Supervisor</label><select id="fs"></select></div>
+      <div class="fg" id="fg-fc"><label>Cliente</label><select id="fc"></select></div>
+      <div class="fg" id="fg-ft"><label>Tienda</label><select id="ft"></select></div>
+      <div class="fg" id="fg-fd"><label id="lb-fd">Departamento</label><select id="fd"></select></div>
       <div class="fg full"><label>Buscar</label><div class="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" id="fq" placeholder="Modelo o descripción…" autocomplete="off"></div></div>
       <button class="btn-r" onclick="resetF()">✕ Limpiar</button>
     </div>
@@ -365,13 +365,25 @@ async function cargar(){
 }
 
 // cambia de pestaña: arma la estructura con los clientes de ese grupo y reinicia filtros y orden
-var TODOS=[], MAN={}, GRUPO='';
+// cada grupo puede ocultar filtros y renombrar departamentos (Steve Madden: Tipo = Zapatos / Accesorios)
+var GRUPOS={
+  marcas:{},
+  steve:{ ocultar:['fc'], depto:'Tipo', renombrar:{'Calzado mujer':'Zapatos'} }
+};
+var TODOS=[], MAN={}, GRUPO='', RENOMBRA={};
+function nd(d){ return RENOMBRA[d]||d; }
 function irGrupo(g){
   if(g===GRUPO) return;
   GRUPO=g;
   document.querySelectorAll('#tabs button').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-g')===g); });
   if(history.replaceState) history.replaceState(null,'',g==='marcas'?location.pathname:'#'+g);
   heroGrupo(g);
+  var cfg=GRUPOS[g]||{};
+  RENOMBRA=cfg.renombrar||{};
+  ORDEN_FILTROS.forEach(function(id){ document.getElementById('fg-'+id).style.display=(cfg.ocultar||[]).indexOf(id)>=0?'none':''; });
+  document.getElementById('lb-fd').textContent=cfg.depto||'Departamento';
+  NOMBRE_FILTRO.fd=cfg.depto||'Departamento';
+  document.querySelector('th[data-col="1"]').textContent=cfg.depto||'Dpto.';
   AT=-1; SI=-1; SC=-1; SD=1; CP=1;
   document.getElementById('fq').value=''; document.getElementById('fo').value='';
   marcarOrden();
@@ -385,7 +397,7 @@ function construir(clientes, man){
   var dep=[], tem=[], mar=[], sup=[], tie=[];
   // listas ordenadas alfabéticamente, como el archivo original
   clientes.forEach(function(c){
-    c.filas.forEach(function(f){ idx(dep,mD,f.d); idx(tem,mT,f.t); idx(mar,mM,f.b); });
+    c.filas.forEach(function(f){ idx(dep,mD,nd(f.d)); idx(tem,mT,f.t); idx(mar,mM,f.b); });
     c.tiendas.forEach(function(t){ idx(sup,mS,t.sup); idx(tie,mTI,t.nombre); });
   });
   var ordenar=function(lista, mapa){ lista.sort(function(a,b){ return a.localeCompare(b,'es',{numeric:false}); }); lista.forEach(function(v,i){ mapa[v]=i; }); };
@@ -397,14 +409,14 @@ function construir(clientes, man){
     var porCod={};
     c.tiendas.forEach(function(t){ porCod[t.cod]={ ti:mTI[t.nombre], si:mS[t.sup] }; });
     var deptos={};
-    c.filas.forEach(function(f){ deptos[mD[f.d]]=1; });
+    c.filas.forEach(function(f){ deptos[mD[nd(f.d)]]=1; });
     Object.keys(deptos).forEach(function(di){ c.tiendas.forEach(function(t){ var p=porCod[t.cod]; SM[ci+'_'+di+'_'+p.ti]=p.si; }); });
     c.filas.forEach(function(f){
       var tiendas=[], sups={}, det={};
       Object.keys(f.s).forEach(function(cod){ var p=porCod[cod]; if(!p) return; tiendas.push(p.ti); det[String(p.ti)]=f.s[cod]; sups[p.si]=1; });
       tiendas.sort(function(a,b){return a-b;});
       var img=IMGS[f.m.toUpperCase()]||'';
-      RAW.push([ci, mD[f.d], f.m, f.n, mT[f.t], mM[f.b], f.q, img, Object.keys(sups).map(Number).sort(function(a,b){return a-b;}), tiendas, det, RAW.length]);
+      RAW.push([ci, mD[nd(f.d)], f.m, f.n, mT[f.t], mM[f.b], f.q, img, Object.keys(sups).map(Number).sort(function(a,b){return a-b;}), tiendas, det, RAW.length]);
     });
   });
   F=RAW.slice();
