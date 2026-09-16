@@ -188,13 +188,9 @@ tbody tr,.card{cursor:pointer;}
   .wrap{padding:10px 10px 30px;}
   .top{font-size:.72rem;margin-bottom:10px;}
   .filtros{padding:12px 12px 10px;}
-  .ftoggle{display:inline-flex;align-items:center;gap:6px;background:var(--azul3);color:var(--azul);border:0;border-radius:999px;padding:7px 12px;font-size:.8rem;font-weight:700;cursor:pointer;}
   .fgrid{grid-template-columns:1fr 1fr;gap:10px;}
   .fgrid .full{grid-column:1/-1;}
-  .fgrid .fg.oculto{display:none;}
-  .filtros.open .fgrid .fg.oculto{display:flex;}
-  .fgrid .btn-r{display:none;grid-column:1/-1;}
-  .filtros.open .fgrid .btn-r{display:block;}
+  .fgrid .btn-r{grid-column:1/-1;}
   .fg select,.fg input{font-size:16px;} /* 16px evita que iOS haga zoom al tocar un filtro */
   .kpis{grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;}
   .kpi{padding:10px 12px;}
@@ -219,12 +215,12 @@ tbody tr,.card{cursor:pointer;}
   <div class="top"><div class="cl" id="meta">Cargando levantamientos…</div><a href="cargar.html">Cargar levantamiento →</a></div>
 
   <section class="panel filtros" id="filtros">
-    <div class="fhead"><h2>Filtros</h2><button class="ftoggle" id="ftoggle" onclick="toggleFiltros()">Filtros</button></div>
+    <div class="fhead"><h2>Filtros</h2></div>
     <div class="fgrid">
-      <div class="fg oculto"><label>Supervisor</label><select id="fs"></select></div>
-      <div class="fg oculto"><label>Cliente</label><select id="fc"></select></div>
-      <div class="fg oculto"><label>Tienda</label><select id="ft"></select></div>
-      <div class="fg oculto"><label>Departamento</label><select id="fd"></select></div>
+      <div class="fg"><label>Supervisor</label><select id="fs"></select></div>
+      <div class="fg"><label>Cliente</label><select id="fc"></select></div>
+      <div class="fg"><label>Tienda</label><select id="ft"></select></div>
+      <div class="fg"><label>Departamento</label><select id="fd"></select></div>
       <div class="fg full"><label>Buscar</label><div class="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" id="fq" placeholder="Modelo o descripción…" autocomplete="off"></div></div>
       <button class="btn-r" onclick="resetF()">✕ Limpiar</button>
     </div>
@@ -499,8 +495,6 @@ function quitar(id){
   document.getElementById(id).value='-1';
   refreshDropdowns(id); applyF();
 }
-// en el celular los desplegables se pliegan; el botón muestra cuántos filtros hay activos
-function toggleFiltros(){ document.getElementById('filtros').classList.toggle('open'); }
 function renderChips(){
   var h='', n=0;
   ORDEN_FILTROS.forEach(function(id){
@@ -511,7 +505,6 @@ function renderChips(){
   var q=document.getElementById('fq').value.trim();
   if(q){ n++; h+='<span class="chip"><small>Buscar:</small><b>'+q.replace(/</g,'&lt;')+'</b><button onclick="quitar(\'fq\')" title="Quitar">×</button></span>'; }
   document.getElementById('chips').innerHTML=h;
-  document.getElementById('ftoggle').textContent=n?'Filtros ('+n+')':'Filtros';
 }
 
 function sortBy(col){
