@@ -341,7 +341,11 @@ tbody tr,.card{cursor:pointer;}
 //   (cliente, depto, temporada, marca, supervisores y tiendas son índices en C, D, T, M, S y TI)
 //   SM["cliente_depto_tienda"] = índice del supervisor de esa tienda
 var C=[], D=[], T=[], M=[], S=[], TI=[], RAW=[], SM={}, IMGS={};
-var IMG='https://drive.google.com/thumbnail?id=';
+// Fotos de Google Drive. El CDN (lh3) aguanta muchas peticiones seguidas; drive.google.com/thumbnail
+// devolvía 429 (demasiadas peticiones) al cargar 50 fotos de golpe y quedaban en blanco. Si lh3 falla se reintenta ahí.
+function fotoUrl(id,w){ return 'https://lh3.googleusercontent.com/d/'+id+'=w'+w; }
+function fotoAlt(id,w){ return 'https://drive.google.com/thumbnail?id='+id+'&sz=w'+w; }
+function fotoError(img){ var id=img.getAttribute('data-id'), w=img.getAttribute('data-w'); if(img.getAttribute('data-alt')){ img.style.display='none'; img.parentNode.textContent='sin foto'; return; } img.setAttribute('data-alt','1'); setTimeout(function(){ img.src=fotoAlt(id,w); },1500); }
 var PS=50, CP=1, SC=-1, SD=1, AT=-1, SI=-1;
 var F=[];
 var BGCLS={'Falabella':'bf','Ripley':'br','Paris':'bp','ABC':'ba','La Polar':'bl','Hites':'bh'};
@@ -449,11 +453,11 @@ function rowHasSup(r,si){
   return false;
 }
 function badgeFor(name){return '<span class="bc '+(BGCLS[name]||'bf')+'">'+name+'</span>';}
-function fotoDe(r, sz){ return '<div class="foto">'+(r[7]?'<img src="'+IMG+r[7]+'&sz=w'+sz+'" loading="lazy" onclick="openLB(\''+r[7]+'\')" alt="">':'sin foto')+'</div>'; }
+function fotoDe(r, sz){ return '<div class="foto">'+(r[7]?'<img src="'+fotoUrl(r[7],sz)+'" data-id="'+r[7]+'" data-w="'+sz+'" loading="lazy" referrerpolicy="no-referrer" onerror="fotoError(this)" onclick="event.stopPropagation();openLB(\''+r[7]+'\')" alt="">':'sin foto')+'</div>'; }
 
 function openLB(id){
   if(!id) return;
-  document.getElementById('lbimg').src=IMG+id+'&sz=w1000';
+  var lb=document.getElementById('lbimg'); lb.onerror=function(){ lb.onerror=null; lb.src=fotoAlt(id,1000); }; lb.src=fotoUrl(id,1000);
   document.getElementById('lb').classList.add('open');
 }
 function closeLB(){
