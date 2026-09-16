@@ -128,9 +128,30 @@
      "uds": 4696
     }
    ]
+  },
+  "steve": {
+   "nombre": "Steve Madden",
+   "subido": "2026-09-16T01:11:10.064Z",
+   "skus": 333,
+   "uds": 10249,
+   "tiendas": 50,
+   "hojas": [
+    {
+     "depto": "Calzado mujer",
+     "semana": "2026-W37 | 07-sept. al 13-sept.",
+     "modelos": 149,
+     "uds": 7562
+    },
+    {
+     "depto": "Accesorios",
+     "semana": "2026-W37 | 07-sept. al 13-sept.",
+     "modelos": 184,
+     "uds": 2687
+    }
+   ]
   }
  },
- "actualizado": "2026-09-15T22:01:56.119Z",
+ "actualizado": "2026-09-16T01:11:10.064Z",
  "imagenes": {
   "subido": "2026-09-15T21:21:28.352Z",
   "modelos": 45486

@@ -20,6 +20,8 @@
     { clave: 'ripley',    nombre: 'Ripley',    excel: 'RIPLEY',    re: /^Levantamiento\s+Ripley\.xlsx$/i,       etiqueta: 'Levantamiento Ripley.xlsx' },
     { clave: 'lapolar',   nombre: 'La Polar',  excel: 'LA POLAR',  re: /^Levantamiento\s+La\s*polar\.xlsx$/i,   etiqueta: 'Levantamiento La polar.xlsx' },
     { clave: 'hites',     nombre: 'Hites',     excel: 'HITES',     re: /^Levantamiento\s+Hites\.xlsx$/i,        etiqueta: 'Levantamiento Hites.xlsx' },
+    // Steve Madden se levanta en Paris (Nombre Cliente: PARIS) pero va en su propia pestaña
+    { clave: 'steve',     nombre: 'Steve Madden', excel: 'PARIS', re: /^Levantamiento\s+Steve\s*Madden\.xlsx$/i, etiqueta: 'Levantamiento Steve Madden.xlsx', cliente: 'Paris', grupo: 'steve' },
   ];
   const IMAGENES = { clave: 'imagenes', nombre: 'Imágenes', re: /^Excel_Macro\.xlsx$/i, etiqueta: 'Excel_Macro.xlsx' };
   const TIPOS = CLIENTES.map(c => ({ tipo: 'cliente', clave: c.clave, nombre: c.nombre, etiqueta: c.etiqueta }))
@@ -130,8 +132,8 @@
     if (!dinamicas.length) throw new Error('No encontré ninguna hoja con la dinámica de Stk Final UN (columna Modelo)');
     if (!tiendas) throw new Error('No encontré la hoja de supervisores (columnas Cod · Tienda · Supervisor)');
 
-    // la hoja que se llama como el cliente es una copia resumen antigua: se omite si hay otras
-    const esResumen = d => d.nombre.trim().toLowerCase() === cli.nombre.toLowerCase();
+    // la hoja que se llama como el cliente del Excel (Paris, Ripley, Falabella…) es una copia resumen antigua: se omite si hay otras
+    const esResumen = d => { const n = d.nombre.trim().toUpperCase(); return n === cli.excel || n === cli.nombre.toUpperCase() || n === txt(d.meta['nombre cliente']).toUpperCase(); };
     let usadas = dinamicas.filter(d => !esResumen(d));
     if (!usadas.length) usadas = dinamicas;
     dinamicas.filter(d => !usadas.includes(d)).forEach(d => omitidas.push(d.nombre));
@@ -177,7 +179,7 @@
     const sups = {};
     tiendas.forEach(t => { sups[t.sup] = 1; });
     return {
-      cliente: cli.nombre, clave: cli.clave, archivo: nombreArchivo, generado: new Date().toISOString(),
+      cliente: cli.cliente || cli.nombre, clave: cli.clave, grupo: cli.grupo || 'marcas', archivo: nombreArchivo, generado: new Date().toISOString(),
       hojas, omitidas, hojaSupervisores: hojaSup, supervisores: Object.keys(sups).sort(), tiendas, filas,
     };
   }

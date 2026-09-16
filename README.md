@@ -11,7 +11,7 @@ Dashboard de levantamientos de stock por cliente, tienda y supervisor. Reemplaza
 | `js/convertir.js` | Conversión Excel → JSON |
 | `js/worker-convertir.js` | Web Worker que lee el Excel sin congelar la pantalla |
 | `data/manifiesto.json` | Qué clientes están publicados, con qué semana y cuándo se subieron |
-| `data/clientes/<cliente>.json` | Levantamiento vigente de cada cliente (`falabella`, `paris`, `ripley`, `lapolar`, `hites`) |
+| `data/clientes/<cliente>.json` | Levantamiento vigente de cada cliente (`falabella`, `paris`, `ripley`, `lapolar`, `hites`) y de Steve Madden (`steve`, pestaña aparte) |
 | `data/imagenes.json` | Modelo → ID de foto en Google Drive (desde `Excel_Macro.xlsx`, hoja Imagenes) |
 
 ## Rutina de carga
@@ -19,6 +19,7 @@ Dashboard de levantamientos de stock por cliente, tienda y supervisor. Reemplaza
 1. Abrir **https://jmunozjm93-blip.github.io/levantamientos/cargar.html** (también hay un enlace "cargar levantamiento" arriba del dashboard).
 2. Arrastrar los Excel, uno por cliente. El nombre debe ser exactamente uno de estos:
    `Levantamiento Fala.xlsx` · `Levantamiento Paris.xlsx` · `Levantamiento Ripley.xlsx` · `Levantamiento La polar.xlsx` · `Levantamiento Hites.xlsx`.
+   Steve Madden va en su propia pestaña: `Levantamiento Steve Madden.xlsx` (se levanta en Paris; hojas CM y ACC, la hoja `Paris` se omite).
    Para actualizar las fotos se arrastra `Excel_Macro.xlsx`.
 3. Revisar el resumen (modelos y unidades por hoja, tiendas sin supervisor) y pulsar **Subir a GitHub**.
 4. En 1–2 minutos el dashboard muestra el levantamiento nuevo. Cada cliente reemplaza al anterior; el historial queda en los commits.

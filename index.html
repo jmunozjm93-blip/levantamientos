@@ -39,10 +39,19 @@ button,select,input{font-family:inherit;}
 .hero .arr{position:absolute;top:50%;transform:translateY(-50%);z-index:2;width:36px;height:36px;border-radius:50%;border:0;background:rgba(0,0,0,.35);color:#fff;font-size:1.3rem;line-height:36px;cursor:pointer;opacity:0;transition:opacity .2s;padding:0;}
 .hero:hover .arr{opacity:1;}
 .hero .arr.l{left:14px;}.hero .arr.r{right:14px;}
+.hero.una .arr{display:none;}
 .wrap{max-width:1280px;margin:0 auto;padding:14px 20px 40px;}
 .pie{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px 14px;padding:16px 4px 0;font-size:.72rem;color:var(--muted2);}
 .pie a{color:var(--muted);text-decoration:none;}
 .pie a:hover{text-decoration:underline;color:var(--azul2);}
+
+/* ---------- pestañas: Converse·Fila·Umbro / Steve Madden ---------- */
+.tabs{display:none;justify-content:center;gap:6px;padding:12px 16px 0;}
+.tabs.on{display:flex;}
+.tabs button{border:1.5px solid var(--line2);background:var(--card);color:var(--muted);border-radius:999px;padding:9px 18px;font-size:.88rem;font-weight:700;cursor:pointer;transition:background .15s,color .15s,border-color .15s;}
+.tabs button:hover{color:var(--azul);border-color:var(--azul2);}
+.tabs button.on{background:var(--azul);border-color:var(--azul);color:#fff;}
+@media(prefers-color-scheme:dark){.tabs button.on{color:#0f1218;}}
 
 /* ---------- paneles ---------- */
 .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sombra);}
@@ -211,13 +220,19 @@ tbody tr,.card{cursor:pointer;}
 </head>
 <body>
 <header class="hero" id="hero">
-  <img class="slide on" src="img/converse.jpg?v=3" alt="Converse" style="--pd:center;--pm:center">
-  <img class="slide" src="img/fila.jpg?v=3" alt="Fila" loading="lazy" style="--pd:center;--pm:70% center">
-  <img class="slide" src="img/umbro.jpg?v=3" alt="Umbro" loading="lazy" style="--pd:center 100%;--pm:75% 100%">
+  <img class="slide on" data-g="marcas" src="img/converse.jpg?v=3" alt="Converse" style="--pd:center;--pm:center">
+  <img class="slide" data-g="marcas" src="img/fila.jpg?v=3" alt="Fila" loading="lazy" style="--pd:center;--pm:70% center">
+  <img class="slide" data-g="marcas" src="img/umbro.jpg?v=3" alt="Umbro" loading="lazy" style="--pd:center 100%;--pm:75% 100%">
+  <img class="slide" data-g="steve" src="img/steve-madden.jpg" alt="Steve Madden" loading="lazy" style="--pd:center 88%;--pm:center 88%">
   <button class="arr l" onclick="heroIr(-1)" aria-label="Anterior">&#8249;</button>
   <button class="arr r" onclick="heroIr(1)" aria-label="Siguiente">&#8250;</button>
   <div class="dots" id="dots"></div>
 </header>
+<nav class="tabs" id="tabs">
+  <button data-g="marcas" onclick="irGrupo('marcas')">Converse · Fila · Umbro</button>
+  <button data-g="steve" onclick="irGrupo('steve')">Steve Madden</button>
+</nav>
+
 
 <div class="wrap">
 
@@ -286,16 +301,24 @@ tbody tr,.card{cursor:pointer;}
 
 <script>
 // ---------- carrusel de la cabecera: fundido cada 5 s, puntos, flechas y deslizar en el celular ----------
+// cada pestaña tiene sus propias imágenes (data-g); heroGrupo() cambia el juego de imágenes
 (function(){
-  var hero=document.getElementById('hero'), slides=hero.querySelectorAll('.slide'), dots=document.getElementById('dots');
-  var i=0, n=slides.length, timer=null;
-  dots.innerHTML=Array.prototype.map.call(slides,function(_,k){ return '<button class="'+(k===0?'on':'')+'" onclick="heroA('+k+')" aria-label="Imagen '+(k+1)+'"></button>'; }).join('');
+  var hero=document.getElementById('hero'), dots=document.getElementById('dots');
+  var slides=[], i=0, timer=null;
   function ir(k){
+    var n=slides.length; if(!n) return;
     i=(k+n)%n;
     slides.forEach(function(s,j){ s.classList.toggle('on',j===i); });
     dots.querySelectorAll('button').forEach(function(d,j){ d.classList.toggle('on',j===i); });
   }
-  function arrancar(){ clearInterval(timer); timer=setInterval(function(){ ir(i+1); },5000); }
+  function arrancar(){ clearInterval(timer); if(slides.length>1) timer=setInterval(function(){ ir(i+1); },5000); }
+  window.heroGrupo=function(g){
+    hero.querySelectorAll('.slide').forEach(function(s){ s.classList.remove('on'); });
+    slides=Array.prototype.filter.call(hero.querySelectorAll('.slide'),function(s){ return s.getAttribute('data-g')===g; });
+    dots.innerHTML=slides.length>1?slides.map(function(_,k){ return '<button onclick="heroA('+k+')" aria-label="Imagen '+(k+1)+'"></button>'; }).join(''):'';
+    hero.classList.toggle('una',slides.length<=1);
+    ir(0); arrancar();
+  };
   window.heroIr=function(d){ ir(i+d); arrancar(); };
   window.heroA=function(k){ ir(k); arrancar(); };
   hero.addEventListener('mouseenter',function(){ clearInterval(timer); });
@@ -304,7 +327,7 @@ tbody tr,.card{cursor:pointer;}
   hero.addEventListener('touchstart',function(e){ x0=e.touches[0].clientX; },{passive:true});
   hero.addEventListener('touchend',function(e){ if(x0===null) return; var dx=e.changedTouches[0].clientX-x0; x0=null; if(Math.abs(dx)>40) window.heroIr(dx<0?1:-1); },{passive:true});
   document.addEventListener('visibilitychange',function(){ if(document.hidden) clearInterval(timer); else arrancar(); });
-  arrancar();
+  window.heroGrupo('marcas');
 })();
 
 // ---------- datos: se descargan desde data/ (publicado por cargar.html) ----------
@@ -332,7 +355,27 @@ async function cargar(){
   if(man.imagenes) pedidos.push(fetch('data/imagenes.json?v='+encodeURIComponent(man.imagenes.subido||'')).then(function(x){ return x.ok?x.json():{img:{}}; }).then(function(j){ IMGS=j.img||{}; }));
   var clientes=(await Promise.all(pedidos)).filter(function(j){ return j && j.filas; });
   clientes.sort(function(a,b){ var ia=ORDEN_CLIENTES.indexOf(a.cliente), ib=ORDEN_CLIENTES.indexOf(b.cliente); return (ia<0?99:ia)-(ib<0?99:ib) || a.cliente.localeCompare(b.cliente); });
-  construir(clientes, man);
+  TODOS=clientes; MAN=man;
+  // pestañas: solo se muestran si hay más de un grupo publicado (marcas / steve)
+  var grupos={}; clientes.forEach(function(c){ grupos[c.grupo||'marcas']=1; });
+  document.getElementById('tabs').classList.toggle('on',Object.keys(grupos).length>1);
+  document.querySelectorAll('#tabs button').forEach(function(b){ b.style.display=grupos[b.getAttribute('data-g')]?'':'none'; });
+  var g=(location.hash||'').replace('#','');
+  irGrupo(grupos[g]?g:(grupos.marcas?'marcas':Object.keys(grupos)[0]));
+}
+
+// cambia de pestaña: arma la estructura con los clientes de ese grupo y reinicia filtros y orden
+var TODOS=[], MAN={}, GRUPO='';
+function irGrupo(g){
+  if(g===GRUPO) return;
+  GRUPO=g;
+  document.querySelectorAll('#tabs button').forEach(function(b){ b.classList.toggle('on',b.getAttribute('data-g')===g); });
+  if(history.replaceState) history.replaceState(null,'',g==='marcas'?location.pathname:'#'+g);
+  heroGrupo(g);
+  AT=-1; SI=-1; SC=-1; SD=1; CP=1;
+  document.getElementById('fq').value=''; document.getElementById('fo').value='';
+  marcarOrden();
+  construir(TODOS.filter(function(c){ return (c.grupo||'marcas')===g; }), MAN);
 }
 
 // arma C/D/T/M/S/TI/RAW/SM a partir de los JSON por cliente
