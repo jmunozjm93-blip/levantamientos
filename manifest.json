@@ -1,0 +1,16 @@
+{
+  "name": "Levantamientos Grupo Depor",
+  "short_name": "Levantamientos",
+  "description": "Levantamientos de stock por cliente, tienda y supervisor",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#2c2221",
+  "theme_color": "#1a3a6b",
+  "lang": "es",
+  "icons": [
+    { "src": "img/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "img/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

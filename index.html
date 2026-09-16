@@ -6,8 +6,12 @@
 <meta name="theme-color" content="#1a3a6b">
 <meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Levantamientos">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="img/icono-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="img/icono-192.png">
 <title>Levantamientos · Grupo Depor</title>
 <style>
 :root{
@@ -704,6 +708,9 @@ function resetF(){
   marcarOrden();
   CP=1; render();
 }
+
+// registro del service worker: necesario para que Android ofrezca "Instalar app" / "Agregar a inicio"
+if('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(function(){});
 
 cargar().catch(function(e){
   var m=document.getElementById('cargando'); m.className='msg err'; m.textContent='No pude cargar los datos: '+e.message;
