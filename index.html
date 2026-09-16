@@ -40,10 +40,9 @@ button,select,input{font-family:inherit;}
 .hero:hover .arr{opacity:1;}
 .hero .arr.l{left:14px;}.hero .arr.r{right:14px;}
 .wrap{max-width:1280px;margin:0 auto;padding:14px 20px 40px;}
-.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px 14px;margin-bottom:12px;font-size:.78rem;color:var(--muted);}
-.top .cl{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;}
-.top a{font-weight:600;text-decoration:none;}
-.top a:hover{text-decoration:underline;}
+.pie{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px 14px;padding:16px 4px 0;font-size:.72rem;color:var(--muted2);}
+.pie a{color:var(--muted);text-decoration:none;}
+.pie a:hover{text-decoration:underline;color:var(--azul2);}
 
 /* ---------- paneles ---------- */
 .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sombra);}
@@ -195,7 +194,6 @@ tbody tr,.card{cursor:pointer;}
   .hero .slide{object-position:var(--pm,center);}
   .hero .arr{display:none;}
   .wrap{padding:10px 10px 30px;}
-  .top{font-size:.72rem;margin-bottom:10px;}
   .filtros{padding:12px 12px 10px;}
   .fgrid{grid-template-columns:1fr 1fr;gap:10px;}
   .fgrid .full{grid-column:1/-1;}
@@ -220,16 +218,15 @@ tbody tr,.card{cursor:pointer;}
 </head>
 <body>
 <header class="hero" id="hero">
-  <img class="slide on" src="img/converse.jpg" alt="Converse" style="--pd:center;--pm:center">
-  <img class="slide" src="img/fila.jpg" alt="Fila" loading="lazy" style="--pd:center;--pm:70% center">
-  <img class="slide" src="img/umbro.jpg" alt="Umbro" loading="lazy" style="--pd:center 100%;--pm:75% 100%">
+  <img class="slide on" src="img/converse.jpg?v=3" alt="Converse" style="--pd:center;--pm:center">
+  <img class="slide" src="img/fila.jpg?v=3" alt="Fila" loading="lazy" style="--pd:center;--pm:70% center">
+  <img class="slide" src="img/umbro.jpg?v=3" alt="Umbro" loading="lazy" style="--pd:center 100%;--pm:75% 100%">
   <button class="arr l" onclick="heroIr(-1)" aria-label="Anterior">&#8249;</button>
   <button class="arr r" onclick="heroIr(1)" aria-label="Siguiente">&#8250;</button>
   <div class="dots" id="dots"></div>
 </header>
 
 <div class="wrap">
-  <div class="top"><div class="cl" id="meta">Cargando levantamientos…</div><a href="cargar.html">Cargar levantamiento →</a></div>
 
   <section class="panel filtros" id="filtros">
     <div class="fhead"><h2>Filtros</h2></div>
@@ -285,6 +282,7 @@ tbody tr,.card{cursor:pointer;}
     <div class="nr" id="nr" style="display:none">Sin resultados para estos filtros.</div>
     <div class="pag" id="pg"></div>
   </section>
+  <footer class="pie"><span id="meta"></span><a href="cargar.html">Cargar levantamiento</a></footer>
 </div>
 <div class="sh" id="sh" onclick="cerrarDetalle()"><div class="sheet" onclick="event.stopPropagation()">
   <div class="sh-h" id="shH"></div>
@@ -382,9 +380,9 @@ function construir(clientes, man){
     var reg=(man.clientes||{})[c.clave]||{};
     var k=Object.keys(sem).join(', ')+(reg.subido?' · cargado '+fechaCorta(reg.subido):'');
     if(!grupos[k]){ grupos[k]=[]; orden.push(k); }
-    grupos[k].push(badgeFor(c.cliente));
+    grupos[k].push(c.cliente);
   });
-  document.getElementById('meta').innerHTML=orden.map(function(k){ return '<span>'+grupos[k].join(' ')+' '+k+'</span>'; }).join('');
+  document.getElementById('meta').textContent=orden.map(function(k){ return grupos[k].join(', ')+': '+k; }).join(' · ');
   document.getElementById('cargando').style.display='none';
   initFiltros();
   render();
@@ -665,7 +663,6 @@ function resetF(){
 
 cargar().catch(function(e){
   var m=document.getElementById('cargando'); m.className='msg err'; m.textContent='No pude cargar los datos: '+e.message;
-  document.getElementById('meta').innerHTML='';
 });
 </script>
 </body>
