@@ -40,13 +40,15 @@
     'DEPORTES HOMBRE': 'Deporte hombre', 'JUVENIL HOMBRE': 'Juvenil', 'KIDS ZAPATILLAS': 'Kids',
   };
 
+  // supervisores que cambiaron: el Excel puede seguir trayendo el nombre antiguo
+  const RENOMBRAR_SUPERVISOR = { 'ABRAHAN ASCUCI': 'CATALINA BRAVO', 'SEBASTIAN PIZARRO': 'CATALINA BRAVO' };
   // valores de la columna Supervisor que significan "nadie": esas tiendas se descartan
   const SIN_SUPERVISOR = ['Z', '-', 'N/A', 'NA', 'SIN SUPERVISOR'];
 
   // ---------- utilitarios ----------
   const vacio = v => v == null || v === '';
   const txt = v => vacio(v) ? '' : String(v).trim();
-  const nombrePersona = v => txt(v).replace(/\s+/g, ' ').toUpperCase();
+  const nombrePersona = v => { const n = txt(v).replace(/\s+/g, ' ').toUpperCase(); return RENOMBRAR_SUPERVISOR[n] || n; };
   const titulo = s => { s = txt(s).toLowerCase(); return s.charAt(0).toUpperCase() + s.slice(1); };
   // el código de sucursal puede venir como número o texto: siempre se compara como texto
   const cod = v => (typeof v === 'number') ? String(v) : txt(v);
