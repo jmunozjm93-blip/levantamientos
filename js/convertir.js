@@ -40,6 +40,15 @@
     'DEPORTES HOMBRE': 'Deporte hombre', 'JUVENIL HOMBRE': 'Juvenil', 'KIDS ZAPATILLAS': 'Kids',
   };
 
+  // Columnas de atributos de la dinámica, por título. Modelo · Descripcion · Temporada · Marca son
+  // obligatorias; la de línea (d) es opcional y puede ir en cualquier posición entre ellas: Hites y
+  // La Polar la traen en la B para separar CALZADO / ROPA / ACCESORIOS en una sola hoja.
+  const COL_ATRIB = {
+    'modelo': 'm', 'descripcion': 'n', 'descripción': 'n', 'temporada': 't', 'marca': 'b',
+    'linea': 'd', 'línea': 'd', 'departamento': 'd', 'departamento interno': 'd',
+    'categoria': 'd', 'categoría': 'd', 'tipo': 'd', 'clase': 'd',
+  };
+
   // supervisores que cambiaron: el Excel puede seguir trayendo el nombre antiguo
   const RENOMBRAR_SUPERVISOR = { 'ABRAHAN ASCUCI': 'CATALINA BRAVO', 'SEBASTIAN PIZARRO': 'CATALINA BRAVO' };
   // valores de la columna Supervisor que significan "nadie": esas tiendas se descartan
@@ -64,9 +73,16 @@
     const iHdr = filas.findIndex(r => txt(r[0]).toLowerCase() === 'modelo');
     if (iHdr < 0) return null;
     const hdr = filas[iHdr];
-    const cabecera = [txt(hdr[1]), txt(hdr[2]), txt(hdr[3])].map(s => s.toLowerCase());
-    if (cabecera[0] !== 'descripcion' || cabecera[1] !== 'temporada' || cabecera[2] !== 'marca')
-      throw new Error(`Hoja "${nombre}": esperaba las columnas Modelo · Descripcion · Temporada · Marca y encontré "${[hdr[0], hdr[1], hdr[2], hdr[3]].map(txt).join(' · ')}"`);
+    // columnas de atributos: se leen por título hasta que aparece la primera sucursal
+    const col = {};
+    let c0 = 0;
+    while (c0 < hdr.length) {
+      const k = COL_ATRIB[txt(hdr[c0]).toLowerCase()];
+      if (!k || col[k] !== undefined) break;
+      col[k] = c0; c0++;
+    }
+    if (['m', 'n', 't', 'b'].some(k => col[k] === undefined))
+      throw new Error(`Hoja "${nombre}": esperaba las columnas Modelo · Descripcion · Temporada · Marca (la de Linea es opcional) y encontré "${hdr.slice(0, 6).map(txt).join(' · ')}"`);
     const arriba = filas.slice(0, iHdr).map(r => r.map(txt).join(' ')).join(' ').toLowerCase();
     if (!/stk final un/.test(arriba)) throw new Error(`Hoja "${nombre}": la dinámica no es de "Stk Final UN"`);
     if (!/nro sucursal/.test(arriba)) throw new Error(`Hoja "${nombre}": la dinámica no tiene "Nro Sucursal" en las columnas`);
@@ -75,10 +91,10 @@
     const meta = {};
     for (let i = 0; i < iHdr; i++) { const k = txt(filas[i][0]); if (k && !vacio(filas[i][1])) meta[k.toLowerCase()] = txt(filas[i][1]); }
 
-    // columnas de sucursal: desde la E hasta "Total general"
+    // columnas de sucursal: hasta "Total general"
     const sucCols = [];
     let colTotal = -1;
-    for (let c = 4; c < hdr.length; c++) {
+    for (let c = c0; c < hdr.length; c++) {
       const h = txt(hdr[c]);
       if (!h) continue;
       if (h.toLowerCase() === 'total general') { colTotal = c; break; }
@@ -90,12 +106,24 @@
     let totalGeneral = null;
     for (let i = iHdr + 1; i < filas.length; i++) {
       const r = filas[i];
-      const m = txt(r[0]);
+      const m = txt(r[col.m]);
       if (!m) continue;
       if (m.toLowerCase() === 'total general') { if (colTotal >= 0 && typeof r[colTotal] === 'number') totalGeneral = r[colTotal]; break; }
       datos.push(r);
     }
-    return { nombre, meta, hdr, sucCols, colTotal, datos, totalGeneral };
+    return { nombre, meta, hdr, col, sucCols, colTotal, datos, totalGeneral };
+  }
+
+  // departamento que se muestra: el "Departamento Interno" traducido; si viene "All" manda la "Linea"
+  // (Hites: CALZADO → Calzado; una hoja de accesorios: ACCESORIOS → Accesorios)
+  function deptoDe(d) {
+    const depRaw = txt(d.meta['departamento interno']), linea = txt(d.meta['linea']);
+    return DEPTOS[depRaw.toUpperCase()] || (/^all$/i.test(depRaw) || !depRaw ? (linea && !/^all$/i.test(linea) ? titulo(linea) : 'Todos') : titulo(depRaw));
+  }
+  // semana del bloque de filtros como número comparable (2026-W37 → 202637); 0 si no trae una sola semana
+  function semanaDe(d) {
+    const m = txt(d.meta['periodo semana (nombre)']).match(/(\d{4})\s*-\s*W\s*(\d{1,2})/i);
+    return m ? (+m[1]) * 100 + (+m[2]) : 0;
   }
 
   // supervisores: tres columnas Cod · Tienda · Supervisor
@@ -134,8 +162,15 @@
     if (!dinamicas.length) throw new Error('No encontré ninguna hoja con la dinámica de Stk Final UN (columna Modelo)');
     if (!tiendas) throw new Error('No encontré la hoja de supervisores (columnas Cod · Tienda · Supervisor)');
 
-    // la hoja que se llama como el cliente del Excel (Paris, Ripley, Falabella…) es una copia resumen antigua: se omite si hay otras
-    const esResumen = d => { const n = d.nombre.trim().toUpperCase(); return n === cli.excel || n === cli.nombre.toUpperCase() || n === txt(d.meta['nombre cliente']).toUpperCase(); };
+    // La hoja que se llama como el cliente (Paris, Ripley, Falabella…) suele ser una copia resumen antigua.
+    // Solo se descarta si además repite el departamento de otra hoja o trae una semana más vieja; así, al
+    // agregarle a Hites o La Polar una hoja de accesorios, su hoja de calzado no se pierde.
+    const seLlamaComoCliente = d => { const n = d.nombre.trim().toUpperCase(); return n === cli.excel || n === cli.nombre.toUpperCase() || n === txt(d.meta['nombre cliente']).toUpperCase(); };
+    const ultima = Math.max(...dinamicas.map(semanaDe));
+    const esResumen = d => seLlamaComoCliente(d) && (
+      dinamicas.some(o => o !== d && deptoDe(o) === deptoDe(d)) ||
+      (semanaDe(d) > 0 && semanaDe(d) < ultima)
+    );
     let usadas = dinamicas.filter(d => !esResumen(d));
     if (!usadas.length) usadas = dinamicas;
     dinamicas.filter(d => !usadas.includes(d)).forEach(d => omitidas.push(d.nombre));
@@ -148,20 +183,24 @@
       const clienteExcel = txt(d.meta['nombre cliente']).toUpperCase();
       if (clienteExcel && clienteExcel !== cli.excel)
         throw new Error(`Hoja "${d.nombre}": el Excel dice "Nombre Cliente: ${clienteExcel}" y el archivo es de ${cli.nombre}`);
-      const depRaw = txt(d.meta['departamento interno']);
-      const linea = txt(d.meta['linea']);
-      const depto = DEPTOS[depRaw.toUpperCase()] || (/^all$/i.test(depRaw) || !depRaw ? (linea && !/^all$/i.test(linea) ? titulo(linea) : 'Todos') : titulo(depRaw));
-      if (deptosVistos[depto]) throw new Error(`Las hojas "${deptosVistos[depto]}" y "${d.nombre}" son del mismo departamento (${depto})`);
-      deptosVistos[depto] = d.nombre;
-
+      const depHoja = deptoDe(d), col = d.col;
       const conSup = d.sucCols.filter(s => supDe[s.cod]);
       const sinSup = d.sucCols.filter(s => !supDe[s.cod]).map(s => s.cod);
-      let uds = 0, omitidos = 0;
-      const porModelo = {};
+      let uds = 0, omitidos = 0, ultimaLinea = '';
+      const porModelo = {}, deptosHoja = {};
       for (const r of d.datos) {
-        const m = txt(r[0]);
-        let fila = porModelo[m];
-        if (!fila) { fila = porModelo[m] = { d: depto, m, n: txt(r[1]), t: txt(r[2]), b: txt(r[3]), q: 0, s: {} }; }
+        const m = txt(r[col.m]);
+        // con columna de línea el departamento es el de la fila; si viene en blanco se arrastra el anterior
+        let depto = depHoja;
+        if (col.d !== undefined) {
+          const v = txt(r[col.d]);
+          if (v) ultimaLinea = v;
+          if (ultimaLinea) depto = DEPTOS[ultimaLinea.toUpperCase()] || titulo(ultimaLinea);
+        }
+        deptosHoja[depto] = 1;
+        const clave = depto + '\u0000' + m;
+        let fila = porModelo[clave];
+        if (!fila) { fila = porModelo[clave] = { d: depto, m, n: txt(r[col.n]), t: txt(r[col.t]), b: txt(r[col.b]), q: 0, s: {} }; }
         for (const sc of conSup) {
           const v = r[sc.c];
           if (typeof v !== 'number' || !isFinite(v) || v === 0) continue;
@@ -169,6 +208,12 @@
           fila.q += v;
         }
       }
+      for (const dep of Object.keys(deptosHoja)) {
+        if (deptosVistos[dep] && deptosVistos[dep] !== d.nombre)
+          throw new Error(`Las hojas "${deptosVistos[dep]}" y "${d.nombre}" traen el mismo departamento (${dep})`);
+        deptosVistos[dep] = d.nombre;
+      }
+      const depto = Object.keys(deptosHoja).sort().join(', ') || depHoja;
       let modelos = 0;
       for (const m of Object.keys(porModelo)) {
         const f = porModelo[m];

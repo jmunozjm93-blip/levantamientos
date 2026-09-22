@@ -32,9 +32,10 @@ La app necesita un token de GitHub (fine-grained, permiso *Contents: Read and wr
 
 Cada archivo trae:
 
-- **Una hoja por departamento** con la dinámica *Stk Final UN*: bloque de filtros arriba (Linea, Departamento Interno, Periodo Semana (nombre), Nombre Cliente…), fila de títulos `Modelo · Descripcion · Temporada · Marca` y una columna por `Nro Sucursal`, más `Total general`. Puede empezar en la fila 1 o en la 4.
+- **Una hoja por departamento** con la dinámica *Stk Final UN*: bloque de filtros arriba (Linea, Departamento Interno, Periodo Semana (nombre), Nombre Cliente…), fila de títulos `Modelo · Descripcion · Temporada · Marca` y una columna por `Nro Sucursal`, más `Total general`. Puede empezar en cualquier fila.
+- **Columna de línea, opcional**: si la dinámica trae además una columna `Linea` (o Departamento / Categoría / Tipo) entre los atributos, el departamento se toma de cada fila y no del bloque de filtros. Así una sola hoja puede traer CALZADO, ROPA y ACCESORIOS (Hites, La Polar). El orden de las columnas de atributos da lo mismo; las sucursales empiezan en la primera columna cuyo título no sea uno de ellos.
 - **Una hoja de supervisores** (`Supervisores` / `Hoja1`) con `Cod · Tienda · Supervisor`. Es la lista de tiendas que se cuentan.
-- Si hay varias hojas de departamento, la que se llama igual que el cliente (`Paris`, `Ripley`, `Falabella`) es una copia resumen antigua y **se omite**. En La Polar y Hites es la única hoja, así que se usa.
+- Si hay varias hojas de departamento, la que se llama igual que el cliente (`Paris`, `Ripley`, `Falabella`) suele ser una copia resumen antigua y **se omite**, pero solo si repite el departamento de otra hoja o trae una semana más vieja. En La Polar y Hites, que tienen una sola hoja con el nombre del cliente, se usa igual.
 
 Departamento que se muestra, según *Departamento Interno*: CALZADO MUJER → Calzado mujer · DEPORTES → Deporte · DEPORTES MUJER → Deporte mujer · DEPORTES HOMBRE → Deporte hombre · JUVENIL HOMBRE → Juvenil · KIDS ZAPATILLAS → Kids. Si viene `All` (Hites) se usa la *Linea* (Calzado).
 
