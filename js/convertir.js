@@ -57,8 +57,10 @@
 
   // supervisores que cambiaron: el Excel puede seguir trayendo el nombre antiguo
   const RENOMBRAR_SUPERVISOR = { 'ABRAHAN ASCUCI': 'CATALINA BRAVO', 'SEBASTIAN PIZARRO': 'CATALINA BRAVO' };
-  // valores de la columna Supervisor que significan "nadie": esas tiendas se descartan
-  const SIN_SUPERVISOR = ['Z', '-', 'N/A', 'NA', 'SIN SUPERVISOR'];
+  // Valores de la columna Supervisor que significan "nadie": esas tiendas se descartan.
+  // Z / ZZZZZ marcan venta a distancia, bodegas, administrativos y tiendas sin asignar.
+  const SIN_SUPERVISOR = ['-', 'N/A', 'NA', 'SIN SUPERVISOR', 'XIMENA SOTO'];
+  const sinSupervisor = n => !n || SIN_SUPERVISOR.includes(n) || /^Z+$/.test(n);
 
   // ---------- utilitarios ----------
   const vacio = v => v == null || v === '';
@@ -143,8 +145,7 @@
       if (vistos[c]) throw new Error(`Hoja "${nombre}": la tienda ${c} aparece dos veces`);
       vistos[c] = 1;
       const nom = txt(r[1]) || c, sup = nombrePersona(r[2]);
-      // "Z" es un relleno para tienda virtual / centro de distribución: cuenta como sin supervisor y no entra
-      if (!sup || SIN_SUPERVISOR.includes(sup)) continue;
+      if (sinSupervisor(sup)) continue;
       tiendas.push({ cod: c, nombre: nom, sup });
     }
     if (!tiendas.length) throw new Error(`Hoja "${nombre}": la lista de supervisores está vacía`);

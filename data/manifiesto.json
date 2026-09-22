@@ -3,33 +3,33 @@
   "falabella": {
    "nombre": "Falabella",
    "subido": "2026-09-22T12:58:53.455Z",
-   "skus": 474,
-   "uds": 30759,
-   "tiendas": 80,
+   "skus": 428,
+   "uds": 27618,
+   "tiendas": 45,
    "hojas": [
     {
      "depto": "Kids",
      "semana": "2026-W38 | 14-sept. al 20-sept.",
-     "modelos": 86,
-     "uds": 2933
+     "modelos": 80,
+     "uds": 2675
     },
     {
      "depto": "Deporte mujer",
      "semana": "2026-W38 | 14-sept. al 20-sept.",
-     "modelos": 83,
-     "uds": 6999
+     "modelos": 72,
+     "uds": 6296
     },
     {
      "depto": "Deporte hombre",
      "semana": "2026-W38 | 14-sept. al 20-sept.",
-     "modelos": 211,
-     "uds": 11245
+     "modelos": 192,
+     "uds": 10079
     },
     {
      "depto": "Calzado mujer",
      "semana": "2026-W38 | 14-sept. al 20-sept.",
-     "modelos": 94,
-     "uds": 9582
+     "modelos": 84,
+     "uds": 8568
     }
    ]
   },
