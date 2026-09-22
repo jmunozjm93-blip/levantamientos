@@ -2,34 +2,34 @@
  "clientes": {
   "falabella": {
    "nombre": "Falabella",
-   "subido": "2026-09-15T21:55:30.298Z",
-   "skus": 436,
-   "uds": 29001,
-   "tiendas": 46,
+   "subido": "2026-09-22T12:58:53.455Z",
+   "skus": 474,
+   "uds": 30759,
+   "tiendas": 80,
    "hojas": [
     {
      "depto": "Kids",
-     "semana": "2026-W37 | 07-sept. al 13-sept.",
-     "modelos": 84,
-     "uds": 2803
+     "semana": "2026-W38 | 14-sept. al 20-sept.",
+     "modelos": 86,
+     "uds": 2933
     },
     {
      "depto": "Deporte mujer",
-     "semana": "2026-W37 | 07-sept. al 13-sept.",
-     "modelos": 75,
-     "uds": 6586
+     "semana": "2026-W38 | 14-sept. al 20-sept.",
+     "modelos": 83,
+     "uds": 6999
     },
     {
      "depto": "Deporte hombre",
-     "semana": "2026-W37 | 07-sept. al 13-sept.",
-     "modelos": 190,
-     "uds": 10587
+     "semana": "2026-W38 | 14-sept. al 20-sept.",
+     "modelos": 211,
+     "uds": 11245
     },
     {
      "depto": "Calzado mujer",
-     "semana": "2026-W37 | 07-sept. al 13-sept.",
-     "modelos": 87,
-     "uds": 9025
+     "semana": "2026-W38 | 14-sept. al 20-sept.",
+     "modelos": 94,
+     "uds": 9582
     }
    ]
   },
@@ -151,7 +151,7 @@
    ]
   }
  },
- "actualizado": "2026-09-22T12:58:46.547Z",
+ "actualizado": "2026-09-22T12:58:53.455Z",
  "imagenes": {
   "subido": "2026-09-15T21:21:28.352Z",
   "modelos": 45486
