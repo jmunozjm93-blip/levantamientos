@@ -14,14 +14,17 @@
   'use strict';
 
   // ---------- nombres de archivo ----------
+  // El número de semana al final del nombre es opcional: "Levantamiento Hites.xlsx" y
+  // "Levantamiento Hites W38.xlsx" valen igual. Si viene, se comprueba contra la semana del Excel.
+  const SEM = '(?:[\\s_-]*[wW]\\s*(\\d{1,2}))?\\.*';
   const CLIENTES = [
-    { clave: 'falabella', nombre: 'Falabella', excel: 'FALABELLA', re: /^Levantamiento\s+Fala(bella)?\.xlsx$/i, etiqueta: 'Levantamiento Fala.xlsx' },
-    { clave: 'paris',     nombre: 'Paris',     excel: 'PARIS',     re: /^Levantamiento\s+Paris\.xlsx$/i,        etiqueta: 'Levantamiento Paris.xlsx' },
-    { clave: 'ripley',    nombre: 'Ripley',    excel: 'RIPLEY',    re: /^Levantamiento\s+Ripley\.xlsx$/i,       etiqueta: 'Levantamiento Ripley.xlsx' },
-    { clave: 'lapolar',   nombre: 'La Polar',  excel: 'LA POLAR',  re: /^Levantamiento\s+La\s*polar\.xlsx$/i,   etiqueta: 'Levantamiento La polar.xlsx' },
-    { clave: 'hites',     nombre: 'Hites',     excel: 'HITES',     re: /^Levantamiento\s+Hites\.xlsx$/i,        etiqueta: 'Levantamiento Hites.xlsx' },
+    { clave: 'falabella', nombre: 'Falabella', excel: 'FALABELLA', re: new RegExp(`^Levantamiento\\s+Fala(?:bella)?${SEM}\\.xlsx$`, 'i'), etiqueta: 'Levantamiento Fala.xlsx' },
+    { clave: 'paris',     nombre: 'Paris',     excel: 'PARIS',     re: new RegExp(`^Levantamiento\\s+Paris${SEM}\\.xlsx$`, 'i'),         etiqueta: 'Levantamiento Paris.xlsx' },
+    { clave: 'ripley',    nombre: 'Ripley',    excel: 'RIPLEY',    re: new RegExp(`^Levantamiento\\s+Ripley${SEM}\\.xlsx$`, 'i'),        etiqueta: 'Levantamiento Ripley.xlsx' },
+    { clave: 'lapolar',   nombre: 'La Polar',  excel: 'LA POLAR',  re: new RegExp(`^Levantamiento\\s+La\\s*polar${SEM}\\.xlsx$`, 'i'),   etiqueta: 'Levantamiento La polar.xlsx' },
+    { clave: 'hites',     nombre: 'Hites',     excel: 'HITES',     re: new RegExp(`^Levantamiento\\s+Hites${SEM}\\.xlsx$`, 'i'),         etiqueta: 'Levantamiento Hites.xlsx' },
     // Steve Madden se levanta en Paris (Nombre Cliente: PARIS) pero va en su propia pestaña
-    { clave: 'steve',     nombre: 'Steve Madden', excel: 'PARIS', re: /^Levantamiento\s+Steve\s*Madden\.xlsx$/i, etiqueta: 'Levantamiento Steve Madden.xlsx', cliente: 'Paris', grupo: 'steve' },
+    { clave: 'steve',     nombre: 'Steve Madden', excel: 'PARIS', re: new RegExp(`^Levantamiento\\s+Steve\\s*Madden${SEM}\\.xlsx$`, 'i'), etiqueta: 'Levantamiento Steve Madden.xlsx', cliente: 'Paris', grupo: 'steve' },
   ];
   const IMAGENES = { clave: 'imagenes', nombre: 'Imágenes', re: /^Excel_Macro\.xlsx$/i, etiqueta: 'Excel_Macro.xlsx' };
   const TIPOS = CLIENTES.map(c => ({ tipo: 'cliente', clave: c.clave, nombre: c.nombre, etiqueta: c.etiqueta }))
@@ -29,7 +32,10 @@
 
   function identificar(nombre) {
     const n = nombre.trim();
-    for (const c of CLIENTES) if (c.re.test(n)) return { tipo: 'cliente', clave: c.clave, nombre: c.nombre };
+    for (const c of CLIENTES) {
+      const m = n.match(c.re);
+      if (m) return { tipo: 'cliente', clave: c.clave, nombre: c.nombre, semana: m[1] ? +m[1] : null };
+    }
     if (IMAGENES.re.test(n)) return { tipo: 'imagenes', clave: 'imagenes', nombre: IMAGENES.nombre };
     return null;
   }
@@ -146,7 +152,7 @@
   }
 
   // ---------- un cliente ----------
-  function parseCliente(wb, cli, nombreArchivo) {
+  function parseCliente(wb, cli, nombreArchivo, semanaArchivo) {
     const dinamicas = [], omitidas = [];
     let tiendas = null, hojaSup = null;
     for (const nombre of wb.SheetNames) {
@@ -223,6 +229,12 @@
       hojas.push({ hoja: d.nombre, depto, semana: txt(d.meta['periodo semana (nombre)']) || txt(d.meta['periodo semana']), anio: txt(d.meta['año']),
                    modelos, uds, filasExcel: d.datos.length, totalExcel: d.totalGeneral, sucursales: d.sucCols.length, sinSupervisor: sinSup, omitidos });
     }
+    // si el nombre del archivo trae la semana, tiene que ser la del Excel (evita subir una semana vieja)
+    if (semanaArchivo) {
+      const enExcel = usadas.map(semanaDe).filter(Boolean).map(s => s % 100);
+      if (enExcel.length && enExcel.indexOf(semanaArchivo) < 0)
+        throw new Error(`El nombre dice semana ${semanaArchivo} pero el Excel es de la semana ${[...new Set(enExcel)].join(' y ')} (${txt(usadas[0].meta['periodo semana (nombre)'])}). Revisa el archivo o su nombre.`);
+    }
     const sups = {};
     tiendas.forEach(t => { sups[t.sup] = 1; });
     return {
@@ -255,7 +267,7 @@
     if (info.tipo === 'imagenes') return parseImagenes(wb);
     const cli = CLIENTES.find(c => c.clave === info.clave);
     if (!cli) throw new Error('Cliente desconocido: ' + info.clave);
-    return parseCliente(wb, cli, nombreArchivo);
+    return parseCliente(wb, cli, nombreArchivo, info.semana);
   }
   function opcionesLectura(info) {
     const o = { dense: true, cellText: false, cellHTML: false, cellStyles: false };

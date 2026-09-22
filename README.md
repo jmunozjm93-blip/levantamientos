@@ -19,6 +19,7 @@ Dashboard de levantamientos de stock por cliente, tienda y supervisor. Reemplaza
 1. Abrir **https://jmunozjm93-blip.github.io/levantamientos/cargar.html** (también hay un enlace "cargar levantamiento" arriba del dashboard).
 2. Arrastrar los Excel, uno por cliente. El nombre debe ser exactamente uno de estos:
    `Levantamiento Fala.xlsx` · `Levantamiento Paris.xlsx` · `Levantamiento Ripley.xlsx` · `Levantamiento La polar.xlsx` · `Levantamiento Hites.xlsx`.
+   El número de semana al final del nombre es opcional (`Levantamiento Hites W38.xlsx`); si se pone, se comprueba contra la semana del Excel.
    Steve Madden va en su propia pestaña: `Levantamiento Steve Madden.xlsx` (se levanta en Paris; hojas CM y ACC, la hoja `Paris` se omite).
    Para actualizar las fotos se arrastra `Excel_Macro.xlsx`.
 3. Revisar el resumen (modelos y unidades por hoja, tiendas sin supervisor) y pulsar **Subir a GitHub**.
