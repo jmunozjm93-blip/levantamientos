@@ -73,7 +73,7 @@
   </div>
 
   <div class="box">
-    <h2>2 · Levantamientos publicados</h2>
+    <h2>2 · Publicado</h2>
     <div id="estado" class="small">Cargando…</div>
   </div>
 
@@ -84,6 +84,7 @@
       <input type="file" id="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple>
     </div>
     <div class="names" id="names"></div>
+    <p class="small" style="margin-top:8px"><b>Liquidaciones:</b> el archivo se llama como el cliente con el descuento, por ejemplo <code>Ripley 70%.xlsx</code> o <code>Liquidacion Paris.xlsx</code> si no tienes el porcentaje. Basta con que traiga una columna de códigos (COD GP, SKU o similar); al subirla eliges hasta cuándo dura.</p>
     <p class="small" style="margin-top:8px">El número de semana al final del nombre es opcional: <code>Levantamiento Hites.xlsx</code> y <code>Levantamiento Hites W38.xlsx</code> valen igual. Si lo pones, se comprueba contra la semana del Excel.</p>
     <div id="cards"></div>
   </div>
@@ -142,11 +143,15 @@ async function leerManifiesto() {
   if (!r) return { clientes: {} };
   try { return JSON.parse(unb64(r.content)); } catch (e) { return { clientes: {} }; }
 }
-async function registrar(info, resumen) {
+async function registrar(info, resumen, vence) {
   const m = await leerManifiesto();
   m.clientes = m.clientes || {};
   const ahora = new Date().toISOString();
-  if (info.tipo === 'imagenes') {
+  if (info.tipo === 'liquidacion') {
+    m.liquidaciones = m.liquidaciones || {};
+    m.liquidaciones[info.id] = { cliente: resumen.cliente, clave: info.clave, pct: resumen.pct, evento: resumen.evento,
+      modelos: resumen.modelos, vence: vence || null, subido: ahora };
+  } else if (info.tipo === 'imagenes') {
     m.imagenes = { subido: ahora, modelos: resumen.modelos };
   } else {
     m.clientes[info.clave] = { nombre: info.nombre, subido: ahora, skus: resumen.skus, uds: resumen.uds, tiendas: resumen.tiendas,
@@ -189,8 +194,38 @@ async function cargarEstado() {
       h += `<tr><td>${esc(e.nombre)}</td><td>${esc(semanas || '—')}</td><td>${fecha(e.subido)}</td><td class="n">${(e.hojas || []).length}</td><td class="n">${fmt(e.skus)}</td><td class="n">${fmt(e.uds)}</td></tr>`;
     }
     h += `<tr><td>Fotos (Excel_Macro)</td><td colspan="2">${m.imagenes ? fecha(m.imagenes.subido) : '<span class="small">— sin cargar —</span>'}</td><td class="n" colspan="3">${m.imagenes ? fmt(m.imagenes.modelos) + ' modelos' : ''}</td></tr></table>`;
+    // liquidaciones vigentes y vencidas (las vencidas ya no salen en el dashboard, pero el archivo sigue ahí)
+    const liq = m.liquidaciones || {};
+    const ids = Object.keys(liq).sort();
+    if (ids.length) {
+      const hoy = new Date().toISOString().slice(0, 10);
+      h += `<table style="margin-top:14px"><tr><th>Liquidación</th><th>Vence</th><th>Subida</th><th class="n">Modelos</th><th></th></tr>` +
+        ids.map(id => {
+          const e = liq[id], vencida = e.vence && e.vence < hoy;
+          return `<tr><td>${esc(e.cliente)}${e.pct != null ? ` <b>${e.pct}%</b>` : ''} <span class="small">${esc(e.evento || '')}</span></td>
+            <td class="${vencida ? 'aviso' : ''}">${e.vence ? e.vence.split('-').reverse().join('-') + (vencida ? ' · vencida' : '') : '<span class="small">sin fecha</span>'}</td>
+            <td>${fecha(e.subido)}</td><td class="n">${fmt(e.modelos)}</td>
+            <td><button class="sec" style="padding:4px 10px;font-size:.8rem" onclick="borrarLiquidacion('${id}')">Borrar</button></td></tr>`;
+        }).join('') + `</table>`;
+    }
     el('estado').innerHTML = h;
   } catch (e) { el('estado').textContent = 'No pude leer el estado: ' + e.message; }
+}
+
+// borra el archivo de la liquidación y su registro en el manifiesto
+async function borrarLiquidacion(id) {
+  if (!token()) { alert('Primero guarda el token de GitHub (paso 1).'); return; }
+  if (!confirm('¿Borrar la liquidación "' + id + '"? Desaparece del dashboard y del repositorio.')) return;
+  try {
+    const path = `data/liquidaciones/${id}.json`;
+    const sha = await shaDe(path);
+    if (sha) await gh(`/contents/${path}`, { method: 'DELETE', body: JSON.stringify({ message: `Borra la liquidación ${id}`, sha, branch: BRANCH }) });
+    const m = await leerManifiesto();
+    if (m.liquidaciones) delete m.liquidaciones[id];
+    m.actualizado = new Date().toISOString();
+    await subir('data/manifiesto.json', JSON.stringify(m, null, 1), `Borra la liquidación ${id}`);
+    cargarEstado();
+  } catch (e) { alert('No pude borrarla: ' + e.message); }
 }
 cargarEstado();
 
@@ -225,6 +260,15 @@ const setSt = (c, cls, msg) => { const s = c.querySelector('[data-st]'); s.class
 
 function tablaResumen(r) {
   if (r.tipo === 'imagenes') return `<table><tr><th class="n">Filas con link</th><th class="n">Modelos con foto</th></tr><tr><td class="n">${fmt(r.filasExcel)}</td><td class="n">${fmt(r.modelos)}</td></tr></table>`;
+  if (r.tipo === 'liquidacion') {
+    const av = [];
+    if (r.repetidos) av.push(`${r.repetidos} repetidos (se cuentan una vez)`);
+    if (r.descartadas) av.push(`${r.descartadas} filas sin código de modelo`);
+    return `<table><tr><th>Cliente</th><th>Evento</th><th>Columna de códigos</th><th class="n">Modelos</th></tr>
+      <tr><td>${esc(r.cliente)}${r.pct != null ? ` <b>${r.pct}%</b>` : ' <span class="small">(sin %)</span>'}</td><td>${esc(r.evento)}</td>
+      <td>${esc(r.columna)} <span class="small">(hoja "${esc(r.hoja)}")</span></td><td class="n">${fmt(r.modelos)} <span class="small">de ${fmt(r.filasExcel)} filas</span></td></tr></table>
+      <div class="small" style="margin-top:6px">Ej.: ${esc(r.muestra.join(' · '))}${av.length ? `<div class="aviso">${esc(av.join(' · '))}</div>` : ''}</div>`;
+  }
   let h = `<table><tr><th>Hoja</th><th>Departamento</th><th>Semana</th><th class="n">Modelos</th><th class="n">Unidades</th><th class="n">Total general Excel</th><th>Sucursales</th></tr>`;
   for (const x of r.hojas) {
     const sin = x.sinSupervisor.length ? `<div class="small aviso">${x.sinSupervisor.length} sin supervisor (no se cuentan): ${esc(x.sinSupervisor.join(', '))}</div>` : '';
@@ -239,7 +283,7 @@ function tablaResumen(r) {
 function procesar(file) {
   const info = Convertir.identificar(file.name);
   const c = tarjeta(file, info);
-  if (!info) { setSt(c, 'bad', 'El nombre no corresponde a ningún cliente. Debe ser exactamente uno de los nombres de la lista (ej. "Levantamiento Paris.xlsx").'); return; }
+  if (!info) { setSt(c, 'bad', 'El nombre no corresponde a ningún archivo conocido. Debe ser uno de los de la lista (ej. "Levantamiento Paris.xlsx" o "Ripley 70%.xlsx").'); return; }
   if (!worker) { setSt(c, 'bad', '✗ No se puede convertir desde el archivo local. Abre la página desde el sitio publicado (ver aviso arriba).'); return; }
   cola.push({ file, info, c }); siguiente();
 }
@@ -262,8 +306,19 @@ function siguiente() {
     const acts = c.querySelector('[data-acts]');
     const bUp = document.createElement('button'); bUp.textContent = 'Subir a GitHub';
     const bDl = document.createElement('button'); bDl.className = 'sec'; bDl.textContent = 'Descargar JSON';
+    // las liquidaciones llevan fecha de término: pasada esa fecha dejan de aparecer en el dashboard
+    let fVence = null;
+    if (info.tipo === 'liquidacion') {
+      const d = new Date(); d.setDate(d.getDate() + 30);
+      const lbl = document.createElement('label'); lbl.className = 'small'; lbl.style.cssText = 'display:flex;align-items:center;gap:6px';
+      fVence = document.createElement('input'); fVence.type = 'date'; fVence.value = d.toISOString().slice(0, 10);
+      fVence.style.cssText = 'background:#0b0d11;color:inherit;border:1px solid var(--line);border-radius:8px;padding:7px 9px;font:inherit';
+      lbl.append('Vence el:', fVence);
+      acts.append(lbl);
+    }
     acts.append(bUp, bDl);
-    const path = info.tipo === 'imagenes' ? 'data/imagenes.json' : `data/clientes/${info.clave}.json`;
+    const path = info.tipo === 'imagenes' ? 'data/imagenes.json'
+      : info.tipo === 'liquidacion' ? `data/liquidaciones/${info.id}.json` : `data/clientes/${info.clave}.json`;
     bDl.onclick = () => { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([msg.texto], { type: 'application/json' })); a.download = path.split('/').pop(); a.click(); };
     bUp.onclick = () => {
       if (!token()) { setSt(c, 'bad', '✗ Primero guarda el token de GitHub (paso 1).'); return; }
@@ -271,9 +326,11 @@ function siguiente() {
       enCola(async () => {
         setSt(c, '', 'Subiendo a GitHub…');
         try {
-          const commit = await subir(path, msg.texto, `${info.nombre}: levantamiento (${file.name})`);
+          let texto = msg.texto;
+          if (fVence) { const j = JSON.parse(texto); j.vence = fVence.value || null; texto = JSON.stringify(j); }
+          const commit = await subir(path, texto, `${info.nombre}: ${info.tipo === 'liquidacion' ? 'liquidación' : 'levantamiento'} (${file.name})`);
           setSt(c, '', 'Registrando…');
-          await registrar(info, msg.resumen);
+          await registrar(info, msg.resumen, fVence && fVence.value);
           setSt(c, 'ok', `✓ Subido a ${path}. GitHub Pages lo publica en 1–2 minutos.`);
           acts.innerHTML = `<a class="small" href="${commit.html_url}" target="_blank" rel="noopener">Ver commit</a>`;
           cargarEstado();

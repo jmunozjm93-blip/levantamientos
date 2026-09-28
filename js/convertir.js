@@ -28,7 +28,24 @@
   ];
   const IMAGENES = { clave: 'imagenes', nombre: 'Imágenes', re: /^Excel_Macro\.xlsx$/i, etiqueta: 'Excel_Macro.xlsx' };
   const TIPOS = CLIENTES.map(c => ({ tipo: 'cliente', clave: c.clave, nombre: c.nombre, etiqueta: c.etiqueta }))
-    .concat([{ tipo: 'imagenes', clave: 'imagenes', nombre: 'Imágenes (Excel_Macro)', etiqueta: IMAGENES.etiqueta }]);
+    .concat([{ tipo: 'imagenes', clave: 'imagenes', nombre: 'Imágenes (Excel_Macro)', etiqueta: IMAGENES.etiqueta },
+             { tipo: 'liquidacion', clave: 'liquidacion', nombre: 'Liquidación', etiqueta: 'Ripley 70%.xlsx' }]);
+
+  // Liquidaciones: "Ripley 70%.xlsx", "Liquidacion Ripley 70.xlsx" o "Liquidacion Paris.xlsx" (sin %).
+  // Un cliente puede tener varios eventos a la vez; el id los distingue (ripley-70, ripley-50…).
+  const LIQ_CLIENTE = { 'FALABELLA': 'falabella', 'FALA': 'falabella', 'PARIS': 'paris', 'RIPLEY': 'ripley',
+                        'LAPOLAR': 'lapolar', 'LA POLAR': 'lapolar', 'HITES': 'hites', 'STEVEMADDEN': 'steve', 'STEVE MADDEN': 'steve' };
+  const LIQ_RE = /^(?:liquidaci[oó]n(?:es)?[\s_-]+)?(falabella|fala|paris|ripley|la\s*polar|hites|steve\s*madden)(?:[\s_-]+(\d{1,2})\s*%?)?\s*\.xlsx$/i;
+  function identificarLiquidacion(n) {
+    const m = n.match(LIQ_RE);
+    if (!m) return null;
+    const clave = LIQ_CLIENTE[m[1].replace(/\s+/g, ' ').toUpperCase()] || LIQ_CLIENTE[m[1].replace(/\s+/g, '').toUpperCase()];
+    if (!clave) return null;
+    const cli = CLIENTES.find(c => c.clave === clave);
+    const pct = m[2] ? +m[2] : null;
+    return { tipo: 'liquidacion', clave, cliente: cli.cliente || cli.nombre, pct,
+             id: clave + (pct != null ? '-' + pct : ''), nombre: 'Liquidación ' + (cli.cliente || cli.nombre) + (pct != null ? ' ' + pct + '%' : '') };
+  }
 
   function identificar(nombre) {
     const n = nombre.trim();
@@ -37,7 +54,7 @@
       if (m) return { tipo: 'cliente', clave: c.clave, nombre: c.nombre, semana: m[1] ? +m[1] : null };
     }
     if (IMAGENES.re.test(n)) return { tipo: 'imagenes', clave: 'imagenes', nombre: IMAGENES.nombre };
-    return null;
+    return identificarLiquidacion(n);
   }
 
   // Departamento Interno del Excel → nombre que se muestra en el dashboard
@@ -263,9 +280,66 @@
     return { generado: new Date().toISOString(), filasExcel: leidas, modelos: Object.keys(img).length, img };
   }
 
+  // ---------- liquidaciones ----------
+  // Tabla plana con títulos en la primera fila con datos. Lo único obligatorio es una columna con los
+  // códigos de modelo: se elige sola, la que más códigos trae (COD GP / SKU / MODELO…). Si hay columnas
+  // de descripción o de evento se aprovechan; el cliente y el % salen del nombre del archivo.
+  const MODELO_RE = /^[A-Za-z0-9]{3,}[-.][A-Za-z0-9]{1,6}$/;
+  function parseLiquidacion(wb, cfg, nombreArchivo) {
+    let mejor = null;
+    for (const nombre of wb.SheetNames) {
+      const filas = filasDe(wb.Sheets[nombre]);
+      const iHdr = filas.findIndex(r => r && r.filter(v => !vacio(v)).length >= 2);
+      if (iHdr < 0) continue;
+      const hdr = (filas[iHdr] || []).map(txt);
+      const datos = filas.slice(iHdr + 1).filter(r => r && r.some(v => !vacio(v)));
+      if (!datos.length) continue;
+      let col = -1, mejorN = 0;
+      for (let c = 0; c < hdr.length; c++) {
+        const n = datos.reduce((a, r) => a + (MODELO_RE.test(txt(r[c])) ? 1 : 0), 0);
+        // a igualdad de códigos manda el título: COD GP / SKU antes que MODELO
+        const puntos = n * (/cod\s*gp|sku|c[oó]digo\s*gp/i.test(hdr[c]) ? 1.2 : 1);
+        if (n > 0 && puntos > mejorN) { mejorN = puntos; col = c; }
+      }
+      if (col < 0) continue;
+      if (!mejor || mejorN > mejor.puntos) {
+        const buscar = re => hdr.findIndex((h, i) => i !== col && re.test(h));
+        mejor = { puntos: mejorN, hoja: nombre, hdr, datos, col, colDesc: buscar(/descripci|detalle|producto/i), colEvento: buscar(/evento|promo|descuento|campa/i) };
+      }
+    }
+    if (!mejor) throw new Error('No encontré una columna con códigos de modelo (COD GP, SKU o similar). Revisa que la primera fila tenga los títulos.');
+
+    const vistos = {}, items = [];
+    let repetidos = 0, descartadas = 0;
+    for (const r of mejor.datos) {
+      const m = txt(r[mejor.col]).toUpperCase();
+      if (!MODELO_RE.test(m)) { descartadas++; continue; }
+      if (vistos[m]) { repetidos++; continue; }
+      vistos[m] = 1;
+      const it = { m };
+      if (mejor.colDesc >= 0) { const d = txt(r[mejor.colDesc]); if (d) it.d = d; }
+      if (mejor.colEvento >= 0) { const e = txt(r[mejor.colEvento]); if (e) it.e = e; }
+      items.push(it);
+    }
+    if (!items.length) throw new Error(`La columna "${mejor.hdr[mejor.col] || mejor.col + 1}" no trae códigos de modelo válidos`);
+
+    // el % sale del nombre del archivo; si no viene, del texto del evento ("Evento 70%")
+    let pct = cfg.pct;
+    if (pct == null) for (const it of items) { const m = (it.e || '').match(/(\d{1,2})\s*%/); if (m) { pct = +m[1]; break; } }
+    const eventos = [...new Set(items.map(i => i.e).filter(Boolean))];
+    return {
+      id: cfg.id, cliente: cfg.cliente, clave: cfg.clave, pct: pct == null ? null : pct,
+      evento: eventos.length === 1 ? eventos[0] : (pct != null ? `Evento ${pct}%` : 'Liquidación'),
+      archivo: nombreArchivo, generado: new Date().toISOString(), vence: null,
+      hoja: mejor.hoja, columna: mejor.hdr[mejor.col] || '', items,
+      filasExcel: mejor.datos.length, repetidos, descartadas,
+    };
+  }
+
   // ---------- punto de entrada ----------
   function convertir(info, wb, nombreArchivo) {
     if (info.tipo === 'imagenes') return parseImagenes(wb);
+    if (info.tipo === 'liquidacion') return parseLiquidacion(wb, info, nombreArchivo);
     const cli = CLIENTES.find(c => c.clave === info.clave);
     if (!cli) throw new Error('Cliente desconocido: ' + info.clave);
     return parseCliente(wb, cli, nombreArchivo, info.semana);
@@ -277,6 +351,9 @@
   }
   function resumen(info, json) {
     if (info.tipo === 'imagenes') return { tipo: 'imagenes', filasExcel: json.filasExcel, modelos: json.modelos };
+    if (info.tipo === 'liquidacion') return { tipo: 'liquidacion', cliente: json.cliente, pct: json.pct, evento: json.evento,
+             hoja: json.hoja, columna: json.columna, modelos: json.items.length, filasExcel: json.filasExcel,
+             repetidos: json.repetidos, descartadas: json.descartadas, muestra: json.items.slice(0, 5).map(i => i.m) };
     return { tipo: 'cliente', cliente: json.cliente, hojas: json.hojas, omitidas: json.omitidas, hojaSupervisores: json.hojaSupervisores,
              tiendas: json.tiendas.length, supervisores: json.supervisores.length, skus: json.filas.length, uds: json.filas.reduce((a, f) => a + f.q, 0) };
   }

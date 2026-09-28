@@ -63,7 +63,9 @@ button,select,input{font-family:inherit;}
 .fhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;}
 .fhead h2{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;}
 .ftoggle{display:none;}
-.fgrid{display:grid;grid-template-columns:repeat(5,1fr) 1.4fr auto;gap:10px 12px;align-items:end;}
+.fgrid{display:grid;grid-template-columns:repeat(6,1fr) 1.4fr auto;gap:10px 12px;align-items:end;}
+.liq{display:inline-block;padding:2px 7px;border-radius:6px;font-size:.68rem;font-weight:800;background:#ffedd5;color:#b45309;letter-spacing:.02em;white-space:nowrap;margin-left:6px;vertical-align:middle;}
+@media(prefers-color-scheme:dark){.liq{background:#4a2f0c;color:#fbbf24;}}
 .fg{display:flex;flex-direction:column;gap:5px;min-width:0;}
 .fg label{font-size:.7rem;font-weight:700;color:var(--azul);text-transform:uppercase;letter-spacing:.06em;}
 .fg select,.fg input{width:100%;padding:10px 12px;border:1.5px solid var(--line2);border-radius:10px;font-size:.92rem;background:var(--input);color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none;}
@@ -248,6 +250,7 @@ tbody tr,.card{cursor:pointer;}
       <div class="fg" id="fg-ft"><label>Tienda</label><select id="ft"></select></div>
       <div class="fg" id="fg-fd"><label id="lb-fd">Departamento</label><select id="fd"></select></div>
       <div class="fg" id="fg-fm"><label>Marca</label><select id="fm"></select></div>
+      <div class="fg" id="fg-fl"><label>Liquidación</label><select id="fl"></select></div>
       <div class="fg full"><label>Buscar</label><div class="buscar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" id="fq" placeholder="Modelo o descripción…" autocomplete="off"></div></div>
       <button class="btn-r" onclick="resetF()">✕ Limpiar</button>
     </div>
@@ -337,10 +340,12 @@ tbody tr,.card{cursor:pointer;}
 
 // ---------- datos: se descargan desde data/ (publicado por cargar.html) ----------
 // Estructura interna, la misma del archivo original:
-//   RAW[i] = [cliente, depto, modelo, descripcion, temporada, marca, cantidad, foto, supervisores[], tiendas[], {tienda: cantidad}]
+//   RAW[i] = [cliente, depto, modelo, descripcion, temporada, marca, cantidad, foto, supervisores[], tiendas[], {tienda: cantidad}, indice, liquidaciones[]]
 //   (cliente, depto, temporada, marca, supervisores y tiendas son índices en C, D, T, M, S y TI)
 //   SM["cliente_depto_tienda"] = índice del supervisor de esa tienda
 var C=[], D=[], T=[], M=[], S=[], TI=[], RAW=[], SM={}, IMGS={};
+// liquidaciones: LIQS son los eventos vigentes; LIQ["clave|MODELO"] la lista de eventos de ese modelo en ese cliente
+var LIQS=[], LIQ={}, EVENTOS=[];
 // Fotos de Google Drive. El CDN (lh3) aguanta muchas peticiones seguidas; drive.google.com/thumbnail
 // devolvía 429 (demasiadas peticiones) al cargar 50 fotos de golpe y quedaban en blanco. Si lh3 falla se reintenta ahí.
 function fotoUrl(id,w){ return 'https://lh3.googleusercontent.com/d/'+id+'=w'+w; }
@@ -362,6 +367,13 @@ async function cargar(){
   if(!claves.length) throw new Error('Todavía no hay levantamientos cargados. Súbelos desde cargar.html.');
   var pedidos=claves.map(function(k){ return fetch('data/clientes/'+k+'.json?v='+encodeURIComponent(man.clientes[k].subido||'')).then(function(x){ if(!x.ok) throw new Error('Falta data/clientes/'+k+'.json'); return x.json(); }); });
   if(man.imagenes) pedidos.push(fetch('data/imagenes.json?v='+encodeURIComponent(man.imagenes.subido||'')).then(function(x){ return x.ok?x.json():{img:{}}; }).then(function(j){ IMGS=j.img||{}; }));
+  // liquidaciones vigentes: las que no tienen fecha de término o cuya fecha todavía no pasa
+  var hoy=new Date().toISOString().slice(0,10);
+  LIQS=Object.keys(man.liquidaciones||{}).filter(function(id){ var v=man.liquidaciones[id].vence; return !v || v>=hoy; })
+    .map(function(id){ return Object.assign({id:id}, man.liquidaciones[id]); });
+  LIQS.forEach(function(l){
+    pedidos.push(fetch('data/liquidaciones/'+l.id+'.json?v='+encodeURIComponent(l.subido||'')).then(function(x){ return x.ok?x.json():null; }).then(function(j){ l.items=(j&&j.items)||[]; }));
+  });
   var clientes=(await Promise.all(pedidos)).filter(function(j){ return j && j.filas; });
   clientes.sort(function(a,b){ var ia=ORDEN_CLIENTES.indexOf(a.cliente), ib=ORDEN_CLIENTES.indexOf(b.cliente); return (ia<0?99:ia)-(ib<0?99:ib) || a.cliente.localeCompare(b.cliente); });
   TODOS=clientes; MAN=man;
@@ -394,7 +406,7 @@ function irGrupo(g){
   NOMBRE_FILTRO.fd=cfg.depto||'Departamento';
   document.querySelector('th[data-col="1"]').textContent=cfg.depto||'Dpto.';
   AT=-1; SI=-1; SC=-1; SD=1; CP=1;
-  document.getElementById('fq').value=''; document.getElementById('fo').value='';
+  document.getElementById('fq').value=''; document.getElementById('fo').value=''; document.getElementById('fl').value='-1';
   marcarOrden();
   construir(TODOS.filter(function(c){ return (c.grupo||'marcas')===g; }), MAN);
 }
@@ -413,6 +425,17 @@ function construir(clientes, man){
   ordenar(dep,mD); ordenar(tem,mT); ordenar(mar,mM); ordenar(sup,mS); ordenar(tie,mTI);
   D=dep; T=tem; M=mar; S=sup; TI=tie;
   C=clientes.map(function(c){ return c.cliente; });
+  // índice de liquidaciones del grupo que se está mostrando: solo los clientes que están en pantalla
+  LIQ={}; EVENTOS=[];
+  var clavesEnPantalla={}; clientes.forEach(function(c){ clavesEnPantalla[c.clave]=1; });
+  LIQS.filter(function(l){ return clavesEnPantalla[l.clave]; }).forEach(function(l){
+    var etiqueta=l.cliente+(l.pct!=null?' '+l.pct+'%':'');
+    EVENTOS.push({ id:l.id, etiqueta:etiqueta });
+    (l.items||[]).forEach(function(it){
+      var k=l.clave+'|'+String(it.m).toUpperCase();
+      (LIQ[k]=LIQ[k]||[]).push({ id:l.id, etiqueta:etiqueta });
+    });
+  });
   RAW=[]; SM={};
   clientes.forEach(function(c, ci){
     var porCod={};
@@ -425,7 +448,7 @@ function construir(clientes, man){
       Object.keys(f.s).forEach(function(cod){ var p=porCod[cod]; if(!p) return; tiendas.push(p.ti); det[String(p.ti)]=f.s[cod]; sups[p.si]=1; });
       tiendas.sort(function(a,b){return a-b;});
       var img=IMGS[f.m.toUpperCase()]||'';
-      RAW.push([ci, mD[nd(f.d)], f.m, f.n, mT[f.t], mM[f.b], f.q, img, Object.keys(sups).map(Number).sort(function(a,b){return a-b;}), tiendas, det, RAW.length]);
+      RAW.push([ci, mD[nd(f.d)], f.m, f.n, mT[f.t], mM[f.b], f.q, img, Object.keys(sups).map(Number).sort(function(a,b){return a-b;}), tiendas, det, RAW.length, LIQ[c.clave+"|"+f.m.toUpperCase()]||null]);
     });
   });
   F=RAW.slice();
@@ -482,7 +505,7 @@ function abrirDetalle(i){
   lista.sort(function(a,b){ return b.q-a.q || TI[a.t].localeCompare(TI[b.t]); });
   var maxQ=lista.reduce(function(m,x){return Math.max(m,x.q);},0);
   document.getElementById('shH').innerHTML=fotoDe(r,400)
-    +'<div class="info"><div class="mod">'+r[2]+'</div><div class="desc">'+r[3]+'</div>'
+    +'<div class="info"><div class="mod">'+r[2]+etiquetasLiq(r)+'</div><div class="desc">'+r[3]+'</div>'
     +'<div class="tags">'+badgeFor(C[ci])+'<span>'+D[di]+'</span><span>·</span><span>'+T[r[4]]+'</span><span>·</span><span>'+M[r[5]]+'</span></div></div>'
     +'<button class="sh-x" onclick="cerrarDetalle()" title="Cerrar">×</button>';
   document.getElementById('shTot').textContent=fmt(sum)+' uds. en '+lista.length+(lista.length===1?' tienda':' tiendas');
@@ -515,8 +538,10 @@ function setSelect(id, idxArr, lookup, ph, keepVal){
 // Cada lista muestra solo lo que existe para lo elegido en las listas anteriores
 // (al elegir un supervisor, en Tienda quedan únicamente sus tiendas).
 var ORDEN_FILTROS=['fs','fc','ft','fd','fm'];
+// el de liquidación no entra en la cascada: es un sí/no sobre las filas ya filtradas
+var FILTRO_LIQ='fl';
 var PLACEHOLDER={fs:'Todos',fc:'Todos',ft:'Todas',fd:'Todos',fm:'Todas'};
-var NOMBRE_FILTRO={fs:'Supervisor',fc:'Cliente',ft:'Tienda',fd:'Departamento',fm:'Marca'};
+var NOMBRE_FILTRO={fs:'Supervisor',fc:'Cliente',ft:'Tienda',fd:'Departamento',fm:'Marca',fl:'Liquidación'};
 
 // opciones disponibles para la lista `id` según lo elegido en las listas que van antes
 function disponibles(id, cons){
@@ -564,10 +589,12 @@ function getQ(r){
 
 function applyF(){
   var ci=gi('fc'), di=gi('fd'), si=gi('fs'), mi=gi('fm'), q=document.getElementById('fq').value.toLowerCase().trim();
+  var liq=document.getElementById('fl').value;
   AT=gi('ft'); SI=si;
   F=RAW.filter(function(r){
     return (ci<0||r[0]===ci)&&(di<0||r[1]===di)&&(mi<0||r[5]===mi)&&(si<0||rowHasSup(r,si))
-          &&(AT<0||r[9].indexOf(AT)>=0)&&(!q||r[2].toLowerCase().indexOf(q)>=0||r[3].toLowerCase().indexOf(q)>=0);
+          &&(AT<0||r[9].indexOf(AT)>=0)&&(!q||r[2].toLowerCase().indexOf(q)>=0||r[3].toLowerCase().indexOf(q)>=0)
+          &&(liq==='-1'||(liq==='no'?!enLiquidacion(r):enLiquidacion(r,liq)));
   });
   if(SC>=0) doSort(SC);
   CP=1; render();
@@ -576,16 +603,38 @@ function applyF(){
 function initFiltros(){
   ORDEN_FILTROS.forEach(function(id){document.getElementById(id).innerHTML='<option value="-1">'+PLACEHOLDER[id]+'</option>';});
   refreshDropdowns();
+  initLiquidacion();
+}
+
+// el filtro de liquidación se arma con los eventos vigentes; si no hay ninguno, se esconde
+function initLiquidacion(){
+  var el=document.getElementById('fl');
+  document.getElementById('fg-fl').style.display=EVENTOS.length?'':'none';
+  var h='<option value="-1">Todas</option><option value="si">En liquidación</option><option value="no">Sin liquidación</option>';
+  if(EVENTOS.length>1) h+=EVENTOS.map(function(e){ return '<option value="'+e.id+'">'+e.etiqueta+'</option>'; }).join('');
+  el.innerHTML=h; el.value='-1';
+}
+// ¿la fila está en liquidación? (opcionalmente, en un evento concreto)
+function enLiquidacion(r, id){
+  if(!r[12]) return false;
+  if(!id || id==='si') return true;
+  return r[12].some(function(l){ return l.id===id; });
+}
+function etiquetasLiq(r){
+  if(!r[12]) return '';
+  return r[12].map(function(l){ return '<span class="liq" title="En liquidación">'+l.etiqueta+'</span>'; }).join('');
 }
 
 ORDEN_FILTROS.forEach(function(id){
   document.getElementById(id).addEventListener('change',function(){refreshDropdowns(id);applyF();});
 });
+document.getElementById('fl').addEventListener('change',applyF);
 document.getElementById('fq').addEventListener('input',applyF);
 
 // quitar un filtro desde su chip
 function quitar(id){
   if(id==='fq'){ document.getElementById('fq').value=''; applyF(); return; }
+  if(id==='fl'){ document.getElementById('fl').value='-1'; applyF(); return; }
   document.getElementById(id).value='-1';
   refreshDropdowns(id); applyF();
 }
@@ -596,6 +645,8 @@ function renderChips(){
     var txt={fs:S,fc:C,ft:TI,fd:D,fm:M}[id][v];
     h+='<span class="chip"><small>'+NOMBRE_FILTRO[id]+':</small><b>'+txt+'</b><button onclick="quitar(\''+id+'\')" title="Quitar">×</button></span>';
   });
+  var liq=document.getElementById('fl');
+  if(liq.value!=='-1'){ n++; h+='<span class="chip"><small>Liquidación:</small><b>'+liq.options[liq.selectedIndex].text+'</b><button onclick="quitar(\'fl\')" title="Quitar">×</button></span>'; }
   var q=document.getElementById('fq').value.trim();
   if(q){ n++; h+='<span class="chip"><small>Buscar:</small><b>'+q.replace(/</g,'&lt;')+'</b><button onclick="quitar(\'fq\')" title="Quitar">×</button></span>'; }
   document.getElementById('chips').innerHTML=h;
@@ -657,13 +708,13 @@ function render(){
     // celular: tarjetas (la tabla queda oculta por CSS)
     cards.innerHTML=pg.map(function(r){
       return '<div class="card" onclick="abrirDetalle('+r[11]+')">'+fotoDe(r,160)
-        +'<div class="crow"><span class="mod">'+r[2]+'</span>'+cant(r)+'</div>'
+        +'<div class="crow"><span class="mod">'+r[2]+etiquetasLiq(r)+'</span>'+cant(r)+'</div>'
         +'<div class="cdesc">'+r[3]+'</div>'
         +'<div class="cmeta">'+badgeFor(C[r[0]])+'<span>'+D[r[1]]+'</span><span>·</span><span>'+T[r[4]]+'</span><span>·</span><span>'+M[r[5]]+'</span></div></div>';
     }).join('');
   } else if(F.length){
     tb.innerHTML=pg.map(function(r){
-      return '<tr onclick="abrirDetalle('+r[11]+')"><td class="tc">'+fotoDe(r,80)+'</td><td><div class="mod">'+r[2]+'</div><div class="desc">'+r[3]+'</div></td><td>'+badgeFor(C[r[0]])+'</td><td>'
+      return '<tr onclick="abrirDetalle('+r[11]+')"><td class="tc">'+fotoDe(r,80)+'</td><td><div class="mod">'+r[2]+etiquetasLiq(r)+'</div><div class="desc">'+r[3]+'</div></td><td>'+badgeFor(C[r[0]])+'</td><td>'
         +D[r[1]]+'</td><td class="dim">'+T[r[4]]+'</td><td>'+M[r[5]]+'</td><td class="n">'+cant(r)+'</td></tr>';
     }).join('');
   }

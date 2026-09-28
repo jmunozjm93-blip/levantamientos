@@ -1,4 +1,13 @@
-# Levantamientos · Grupo Depor
+| `data/imagenes.json` | Modelo → ID de foto en Google Drive (desde `Excel_Macro.xlsx`, hoja Imagenes) |
+| `data/liquidaciones/<id>.json` | Modelos en liquidación de un evento (`ripley-70`), con su fecha de término |
+
+## Liquidaciones
+
+Se suben por la misma página. El archivo se llama como el cliente con el descuento: `Ripley 70%.xlsx`, `Liquidacion Paris 50.xlsx`, o solo `Liquidacion Paris.xlsx` cuando no se sabe el porcentaje.
+
+- Es una tabla plana con títulos en la primera fila. Lo único obligatorio es **una columna con los códigos de modelo**: se elige sola (la que más códigos trae, prefiriendo `COD GP` o `SKU`). Si hay columnas de descripción o de evento se aprovechan.
+- Al subir se elige **hasta cuándo dura**. Pasada esa fecha el evento deja de aparecer en el dashboard; el archivo se borra desde `cargar.html`.
+- En el dashboard aparece el filtro **Liquidación** (En liquidación / Sin liquidación / cada evento) y una etiqueta naranja con el cliente y el % junto al modelo. Un mismo modelo puede estar liquidado en varios clientes: la etiqueta y el filtro aplican solo a las filas de ese cliente.# Levantamientos · Grupo Depor
 
 Dashboard de levantamientos de stock por cliente, tienda y supervisor. Reemplaza al archivo único `levantamientos.html` (10 MB con todo embebido): ahora la página es liviana y los datos se publican por cliente desde el navegador, con el mismo flujo por token que el sell out.
 
