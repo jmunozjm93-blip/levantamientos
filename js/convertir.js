@@ -56,10 +56,10 @@
   };
 
   // supervisores que cambiaron: el Excel puede seguir trayendo el nombre antiguo
-  const RENOMBRAR_SUPERVISOR = { 'ABRAHAN ASCUCI': 'CATALINA BRAVO', 'SEBASTIAN PIZARRO': 'CATALINA BRAVO' };
+  const RENOMBRAR_SUPERVISOR = { 'ABRAHAN ASCUCI': 'CATALINA BRAVO', 'SEBASTIAN PIZARRO': 'CATALINA BRAVO', 'XIMENA SOTO': 'CATALINA BRAVO' };
   // Valores de la columna Supervisor que significan "nadie": esas tiendas se descartan.
   // Z / ZZZZZ marcan venta a distancia, bodegas, administrativos y tiendas sin asignar.
-  const SIN_SUPERVISOR = ['-', 'N/A', 'NA', 'SIN SUPERVISOR', 'XIMENA SOTO'];
+  const SIN_SUPERVISOR = ['-', 'N/A', 'NA', 'SIN SUPERVISOR'];
   const sinSupervisor = n => !n || SIN_SUPERVISOR.includes(n) || /^Z+$/.test(n);
 
   // ---------- utilitarios ----------
