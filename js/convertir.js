@@ -29,7 +29,7 @@
   const IMAGENES = { clave: 'imagenes', nombre: 'Imágenes', re: /^Excel_Macro\.xlsx$/i, etiqueta: 'Excel_Macro.xlsx' };
   const TIPOS = CLIENTES.map(c => ({ tipo: 'cliente', clave: c.clave, nombre: c.nombre, etiqueta: c.etiqueta }))
     .concat([{ tipo: 'imagenes', clave: 'imagenes', nombre: 'Imágenes (Excel_Macro)', etiqueta: IMAGENES.etiqueta },
-             { tipo: 'liquidacion', clave: 'liquidacion', nombre: 'Liquidación', etiqueta: 'Ripley 70%.xlsx' }]);
+             { tipo: 'liquidacion', clave: 'liquidacion', nombre: 'Liquidación', etiqueta: 'Liquidacion Paris 30%.xlsx' }]);
 
   // Liquidaciones. El nombre es flexible: basta que empiece con "Liquidación" (o Liquicion, Liq…) y
   // diga el cliente. Lo que venga después es el nombre del evento y un % si lo trae:

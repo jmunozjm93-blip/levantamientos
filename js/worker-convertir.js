@@ -1,5 +1,6 @@
 /* Web Worker: lee el Excel y lo convierte sin congelar la pantalla */
-importScripts('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js', 'convertir.js');
+// el ?v=… que trae la URL del worker se pasa a convertir.js para que nunca use una copia vieja del navegador
+importScripts('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js', 'convertir.js' + (self.location.search || ''));
 
 self.onmessage = function (e) {
   const { id, info, nombre, buffer } = e.data;

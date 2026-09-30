@@ -84,13 +84,18 @@
       <input type="file" id="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" multiple>
     </div>
     <div class="names" id="names"></div>
-    <p class="small" style="margin-top:8px"><b>Liquidaciones:</b> el archivo se llama como el cliente con el descuento, por ejemplo <code>Ripley 70%.xlsx</code> o <code>Liquidacion Paris.xlsx</code> si no tienes el porcentaje. Basta con que traiga una columna de códigos (COD GP, SKU o similar); al subirla eliges hasta cuándo dura.</p>
+    <p class="small" style="margin-top:8px"><b>Liquidaciones:</b> basta que el nombre empiece por <b>Liquidación</b> (vale <code>Liquicion</code>, <code>Liq</code>…) y diga el cliente; lo que siga es el nombre del evento y el % si lo tienes: <code>Liquicion Paris Deporte Converse.xlsx</code>, <code>Liquidacion Falabella 50%.xlsx</code>. Del Excel solo necesita una columna de códigos (COD GP, SKU, Modelo); si además trae una columna de descuento, cada modelo lleva el suyo (0,3 = 30%) y los que están en 0 quedan fuera. Al subirla eliges hasta cuándo dura.</p>
     <p class="small" style="margin-top:8px">El número de semana al final del nombre es opcional: <code>Levantamiento Hites.xlsx</code> y <code>Levantamiento Hites W38.xlsx</code> valen igual. Si lo pones, se comprueba contra la semana del Excel.</p>
     <div id="cards"></div>
   </div>
 </main>
 
-<script src="js/convertir.js"></script>
+<script>
+// El conversor se pide siempre fresco. Si el navegador se queda con una versión vieja deja de
+// reconocer archivos nuevos y parece que "no funciona" aunque el sitio ya esté actualizado.
+var VER = Date.now();
+document.write('<scr' + 'ipt src="js/convertir.js?v=' + VER + '"></scr' + 'ipt>');
+</script>
 <script>
 const OWNER = 'jmunozjm93-blip', REPO = 'levantamientos', BRANCH = 'main';
 const API = `https://api.github.com/repos/${OWNER}/${REPO}`;
@@ -250,7 +255,7 @@ cargarEstado();
 // abierta con doble clic (file://) el navegador bloquea el Web Worker y no se puede convertir nada:
 // se avisa y se manda a la versión publicada
 let worker = null;
-try { if (location.protocol === 'file:') throw new Error('file'); worker = new Worker('js/worker-convertir.js'); } catch (e) {
+try { if (location.protocol === 'file:') throw new Error('file'); worker = new Worker('js/worker-convertir.js?v=' + VER); } catch (e) {
   const n = document.createElement('div'); n.className = 'box'; n.style.borderColor = '#ef4444';
   n.innerHTML = `<div class="st bad">✗ Esta página no funciona abierta desde el archivo local (${esc(location.protocol)}). Ábrela desde el sitio publicado:</div>
     <p style="margin:8px 0 0"><a href="https://${OWNER}.github.io/${REPO}/cargar.html">https://${OWNER}.github.io/${REPO}/cargar.html</a></p>`;
