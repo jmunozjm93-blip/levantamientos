@@ -212,6 +212,23 @@ async function cargarEstado() {
   } catch (e) { el('estado').textContent = 'No pude leer el estado: ' + e.message; }
 }
 
+// GitHub Pages a veces deja el build colgado y el sitio sigue mostrando lo anterior sin avisar.
+// Se comprueba que el archivo publicado ya sea el que se acaba de subir; si no, se avisa.
+async function esperarPublicacion(c, path, largo) {
+  const hasta = Date.now() + 5 * 60 * 1000;
+  while (Date.now() < hasta) {
+    await new Promise(r => setTimeout(r, 15000));
+    try {
+      const r = await fetch(path + '?t=' + Date.now(), { cache: 'no-store' });
+      if (r.ok && Math.abs((await r.text()).length - largo) < 2) {
+        setSt(c, 'ok', `✓ Publicado. El dashboard ya lo muestra (recarga con Ctrl+Shift+R).`);
+        return;
+      }
+    } catch (e) { /* se reintenta */ }
+  }
+  setSt(c, 'warn', '⚠ Se subió bien a GitHub, pero el sitio todavía muestra la versión anterior. Suele destrabarse solo; si en 10 minutos sigue igual, avísame para reintentar la publicación.');
+}
+
 // borra el archivo de la liquidación y su registro en el manifiesto
 async function borrarLiquidacion(id) {
   if (!token()) { alert('Primero guarda el token de GitHub (paso 1).'); return; }
@@ -331,7 +348,8 @@ function siguiente() {
           const commit = await subir(path, texto, `${info.nombre}: ${info.tipo === 'liquidacion' ? 'liquidación' : 'levantamiento'} (${file.name})`);
           setSt(c, '', 'Registrando…');
           await registrar(info, msg.resumen, fVence && fVence.value);
-          setSt(c, 'ok', `✓ Subido a ${path}. GitHub Pages lo publica en 1–2 minutos.`);
+          setSt(c, 'ok', `✓ Subido a ${path}. Esperando a que GitHub Pages lo publique…`);
+          esperarPublicacion(c, path, msg.texto.length);
           acts.innerHTML = `<a class="small" href="${commit.html_url}" target="_blank" rel="noopener">Ver commit</a>`;
           cargarEstado();
         } catch (e) { setSt(c, 'bad', '✗ ' + e.message); bUp.disabled = false; }
