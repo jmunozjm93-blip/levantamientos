@@ -217,6 +217,23 @@ async function cargarEstado() {
   } catch (e) { el('estado').textContent = 'No pude leer el estado: ' + e.message; }
 }
 
+// Cuando GitHub responde 401/403 el mensaje suyo no dice qué hacer: se prueba el token y se explica.
+async function diagnosticoToken() {
+  try {
+    const r = await gh('');
+    if (!r) return '\n\nEl token no ve el repositorio ' + OWNER + '/' + REPO + '. En GitHub → Settings → Personal access tokens, en "Repository access", agrégalo.';
+    try {
+      const ref = await gh(`/git/ref/heads/${BRANCH}`);
+      await gh(`/git/refs/heads/${BRANCH}`, { method: 'PATCH', body: JSON.stringify({ sha: ref.object.sha, force: false }) });
+      return '\n\nEl token sí puede escribir, así que probablemente fue algo puntual de GitHub: vuelve a pulsar "Subir a GitHub". Si insiste, pulsa "Descargar JSON" y me lo pasas.';
+    } catch (e2) {
+      return '\n\nEl token ya no puede escribir en ' + OWNER + '/' + REPO + '. Ábrelo en GitHub → Settings → Personal access tokens: revisa que no haya expirado y que en Permissions → Contents diga "Read and write". Después pégalo de nuevo arriba y vuelve a intentarlo.';
+    }
+  } catch (e) {
+    return '\n\nEl token no sirve (puede haber expirado o haber sido borrado). Crea uno nuevo con Contents: Read and write sobre ' + OWNER + '/' + REPO + ' y pégalo en el paso 1.';
+  }
+}
+
 // GitHub Pages a veces deja el build colgado y el sitio sigue mostrando lo anterior sin avisar.
 // Se comprueba que el archivo publicado ya sea el que se acaba de subir; si no, se avisa.
 async function esperarPublicacion(c, path, largo) {
@@ -360,7 +377,7 @@ function siguiente() {
           esperarPublicacion(c, path, msg.texto.length);
           acts.innerHTML = `<a class="small" href="${commit.html_url}" target="_blank" rel="noopener">Ver commit</a>`;
           cargarEstado();
-        } catch (e) { setSt(c, 'bad', '✗ ' + e.message); bUp.disabled = false; }
+        } catch (e) { setSt(c, 'bad', '✗ ' + e.message + (/GitHub 40[13]/.test(e.message) ? await diagnosticoToken() : '')); bUp.disabled = false; }
       });
     };
     fin();
