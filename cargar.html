@@ -279,11 +279,14 @@ function tablaResumen(r) {
   if (r.tipo === 'imagenes') return `<table><tr><th class="n">Filas con link</th><th class="n">Modelos con foto</th></tr><tr><td class="n">${fmt(r.filasExcel)}</td><td class="n">${fmt(r.modelos)}</td></tr></table>`;
   if (r.tipo === 'liquidacion') {
     const av = [];
+    if (r.sinDescuento) av.push(`${r.sinDescuento} modelos con descuento 0 (no entran)`);
     if (r.repetidos) av.push(`${r.repetidos} repetidos (se cuentan una vez)`);
     if (r.descartadas) av.push(`${r.descartadas} filas sin código de modelo`);
-    return `<table><tr><th>Cliente</th><th>Evento</th><th>Columna de códigos</th><th class="n">Modelos</th></tr>
-      <tr><td>${esc(r.cliente)}${r.pct != null ? ` <b>${r.pct}%</b>` : ' <span class="small">(sin %)</span>'}</td><td>${esc(r.evento)}</td>
-      <td>${esc(r.columna)} <span class="small">(hoja "${esc(r.hoja)}")</span></td><td class="n">${fmt(r.modelos)} <span class="small">de ${fmt(r.filasExcel)} filas</span></td></tr></table>
+    const dto = (r.pcts && r.pcts.length > 1) ? r.pcts.join('% · ') + '%' : (r.pct != null ? r.pct + '%' : '<span class="small">sin dato</span>');
+    return `<table><tr><th>Cliente</th><th>Evento</th><th>Descuento</th><th>Columnas</th><th class="n">Modelos</th></tr>
+      <tr><td>${esc(r.cliente)}</td><td>${esc(r.evento)}</td><td><b>${dto}</b></td>
+      <td>${esc(r.columna)}${r.columnaPct ? ' · ' + esc(r.columnaPct) : ''} <span class="small">(hoja "${esc(r.hoja)}")</span></td>
+      <td class="n">${fmt(r.modelos)} <span class="small">de ${fmt(r.filasExcel)} filas</span></td></tr></table>
       <div class="small" style="margin-top:6px">Ej.: ${esc(r.muestra.join(' · '))}${av.length ? `<div class="aviso">${esc(av.join(' · '))}</div>` : ''}</div>`;
   }
   let h = `<table><tr><th>Hoja</th><th>Departamento</th><th>Semana</th><th class="n">Modelos</th><th class="n">Unidades</th><th class="n">Total general Excel</th><th>Sucursales</th></tr>`;

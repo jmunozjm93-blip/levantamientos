@@ -3,9 +3,10 @@
 
 ## Liquidaciones
 
-Se suben por la misma página. El archivo se llama como el cliente con el descuento: `Ripley 70%.xlsx`, `Liquidacion Paris 50.xlsx`, o solo `Liquidacion Paris.xlsx` cuando no se sabe el porcentaje.
+Se suben por la misma página. Basta con que el nombre empiece por "Liquidación" (vale `Liquicion`, `Liq`…) y diga el cliente; lo que siga es el nombre del evento y el % si se sabe: `Liquicion Paris Deporte Converse.xlsx`, `Liquidacion Falabella 50%.xlsx`, `Liquidacion Ripley outlet 30.xlsx`. Sin esa palabra delante también vale `Ripley 70%.xlsx` (cliente + %).
 
 - Es una tabla plana con títulos en la primera fila. Lo único obligatorio es **una columna con los códigos de modelo**: se elige sola (la que más códigos trae, prefiriendo `COD GP` o `SKU`). Si hay columnas de descripción o de evento se aprovechan.
+- **Descuento por modelo, opcional**: si hay una columna de descuento (título con "liquidación", "descuento", "%"… o una columna numérica), cada modelo lleva su propio porcentaje. Se acepta como fracción (`0,3` = 30%) o como número (`30`). Los modelos con **0 no entran** en la liquidación.
 - Al subir se elige **hasta cuándo dura**. Pasada esa fecha el evento deja de aparecer en el dashboard; el archivo se borra desde `cargar.html`.
 - En el dashboard aparece el filtro **Liquidación** (En liquidación / Sin liquidación / cada evento) y una etiqueta naranja con el cliente y el % junto al modelo. Un mismo modelo puede estar liquidado en varios clientes: la etiqueta y el filtro aplican solo a las filas de ese cliente.# Levantamientos · Grupo Depor
 

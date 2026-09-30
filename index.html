@@ -429,11 +429,12 @@ function construir(clientes, man){
   LIQ={}; EVENTOS=[];
   var clavesEnPantalla={}; clientes.forEach(function(c){ clavesEnPantalla[c.clave]=1; });
   LIQS.filter(function(l){ return clavesEnPantalla[l.clave]; }).forEach(function(l){
-    var etiqueta=l.cliente+(l.pct!=null?' '+l.pct+'%':'');
-    EVENTOS.push({ id:l.id, etiqueta:etiqueta });
+    // el nombre del evento en el filtro; la etiqueta de cada fila lleva el % del modelo si lo trae
+    EVENTOS.push({ id:l.id, etiqueta:l.cliente+(l.pct!=null?' '+l.pct+'%':'')+(l.evento&&l.evento!=='Liquidación'&&l.evento.indexOf('Evento')!==0?' · '+l.evento:'') });
     (l.items||[]).forEach(function(it){
       var k=l.clave+'|'+String(it.m).toUpperCase();
-      (LIQ[k]=LIQ[k]||[]).push({ id:l.id, etiqueta:etiqueta });
+      var p=it.p!=null?it.p:l.pct;
+      (LIQ[k]=LIQ[k]||[]).push({ id:l.id, etiqueta:l.cliente+(p!=null?' '+p+'%':'') });
     });
   });
   RAW=[]; SM={};
