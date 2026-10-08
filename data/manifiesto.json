@@ -2,156 +2,156 @@
  "clientes": {
   "falabella": {
    "nombre": "Falabella",
-   "subido": "2026-09-22T12:58:53.455Z",
-   "skus": 431,
-   "uds": 28243,
+   "subido": "2026-10-08T14:59:43.818Z",
+   "skus": 408,
+   "uds": 28624,
    "tiendas": 46,
    "hojas": [
     {
      "depto": "Kids",
-     "semana": "2026-W38 | 14-sept. al 20-sept.",
-     "modelos": 81,
-     "uds": 2687
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
+     "modelos": 106,
+     "uds": 4848
     },
     {
      "depto": "Deporte mujer",
-     "semana": "2026-W38 | 14-sept. al 20-sept.",
-     "modelos": 73,
-     "uds": 6487
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
+     "modelos": 69,
+     "uds": 6412
     },
     {
      "depto": "Deporte hombre",
-     "semana": "2026-W38 | 14-sept. al 20-sept.",
-     "modelos": 192,
-     "uds": 10256
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
+     "modelos": 143,
+     "uds": 8716
     },
     {
      "depto": "Calzado mujer",
-     "semana": "2026-W38 | 14-sept. al 20-sept.",
-     "modelos": 85,
-     "uds": 8813
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
+     "modelos": 90,
+     "uds": 8648
     }
    ]
   },
   "paris": {
    "nombre": "Paris",
-   "subido": "2026-09-30T17:44:05.810Z",
-   "skus": 677,
-   "uds": 51025,
+   "subido": "2026-10-08T14:59:43.921Z",
+   "skus": 689,
+   "uds": 57572,
    "tiendas": 50,
    "hojas": [
     {
      "depto": "Calzado mujer",
-     "semana": "2026-W39 | 21-sept. al 27-sept.",
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
      "modelos": 103,
-     "uds": 9313
+     "uds": 9070
     },
     {
      "depto": "Deporte",
-     "semana": "2026-W39 | 21-sept. al 27-sept.",
-     "modelos": 253,
-     "uds": 24110
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
+     "modelos": 266,
+     "uds": 29096
     },
     {
      "depto": "Juvenil",
-     "semana": "2026-W39 | 21-sept. al 27-sept.",
-     "modelos": 184,
-     "uds": 7375
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
+     "modelos": 182,
+     "uds": 8865
     },
     {
      "depto": "Kids",
-     "semana": "2026-W39 | 21-sept. al 27-sept.",
-     "modelos": 137,
-     "uds": 10227
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
+     "modelos": 138,
+     "uds": 10541
     }
    ]
   },
   "ripley": {
    "nombre": "Ripley",
-   "subido": "2026-09-30T17:44:01.501Z",
+   "subido": "2026-10-08T14:59:43.983Z",
    "skus": 467,
-   "uds": 32125,
+   "uds": 31441,
    "tiendas": 44,
    "hojas": [
     {
      "depto": "Deporte",
-     "semana": "2026-W39 | 21-sept. al 27-sept.",
-     "modelos": 170,
-     "uds": 12418
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
+     "modelos": 167,
+     "uds": 11446
     },
     {
      "depto": "Calzado mujer",
-     "semana": "2026-W39 | 21-sept. al 27-sept.",
-     "modelos": 72,
-     "uds": 5928
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
+     "modelos": 75,
+     "uds": 5745
     },
     {
      "depto": "Juvenil",
-     "semana": "2026-W39 | 21-sept. al 27-sept.",
-     "modelos": 131,
-     "uds": 6664
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
+     "modelos": 132,
+     "uds": 7436
     },
     {
      "depto": "Kids",
-     "semana": "2026-W39 | 21-sept. al 27-sept.",
-     "modelos": 94,
-     "uds": 7115
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
+     "modelos": 93,
+     "uds": 6814
     }
    ]
   },
   "lapolar": {
    "nombre": "La Polar",
-   "subido": "2026-09-30T17:44:09.808Z",
+   "subido": "2026-10-08T14:59:44.007Z",
    "skus": 83,
-   "uds": 9733,
+   "uds": 9170,
    "tiendas": 41,
    "hojas": [
     {
      "depto": "Accesorios, Calzado, Ropa",
-     "semana": "2026-W39 | 21-sept. al 27-sept.",
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
      "modelos": 83,
-     "uds": 9733
+     "uds": 9170
     }
    ]
   },
   "hites": {
    "nombre": "Hites",
-   "subido": "2026-09-30T17:44:14.328Z",
-   "skus": 100,
-   "uds": 7363,
+   "subido": "2026-10-08T14:59:44.030Z",
+   "skus": 99,
+   "uds": 7305,
    "tiendas": 29,
    "hojas": [
     {
      "depto": "Accesorios, Calzado, Ropa",
-     "semana": "2026-W39 | 21-sept. al 27-sept.",
-     "modelos": 100,
-     "uds": 7363
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
+     "modelos": 99,
+     "uds": 7305
     }
    ]
   },
   "steve": {
    "nombre": "Steve Madden",
-   "subido": "2026-09-30T17:43:57.268Z",
-   "skus": 342,
-   "uds": 12880,
+   "subido": "2026-10-08T14:59:44.083Z",
+   "skus": 336,
+   "uds": 12338,
    "tiendas": 50,
    "hojas": [
     {
      "depto": "Calzado mujer",
-     "semana": "2026-W39 | 21-sept. al 27-sept.",
-     "modelos": 163,
-     "uds": 10423
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
+     "modelos": 160,
+     "uds": 9993
     },
     {
      "depto": "Accesorios",
-     "semana": "2026-W39 | 21-sept. al 27-sept.",
-     "modelos": 179,
-     "uds": 2457
+     "semana": "2026-W40 | 28-sept. al 04-oct.",
+     "modelos": 176,
+     "uds": 2345
     }
    ]
   }
  },
- "actualizado": "2026-09-30T18:58:12.147Z",
+ "actualizado": "2026-10-08T14:59:44.099Z",
  "imagenes": {
   "subido": "2026-09-15T21:21:28.352Z",
   "modelos": 45486
@@ -181,8 +181,8 @@
    "pct": null,
    "evento": "Calzado Mujer",
    "modelos": 45,
-   "vence": "2026-10-30",
-   "subido": "2026-09-30T18:58:12.147Z"
+   "vence": "2026-11-07",
+   "subido": "2026-10-08T14:59:44.099Z"
   }
  }
 }
