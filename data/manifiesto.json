@@ -151,20 +151,20 @@
    ]
   }
  },
- "actualizado": "2026-10-21T16:40:37.130Z",
+ "actualizado": "2026-10-21T16:40:38.876Z",
  "imagenes": {
   "subido": "2026-09-15T21:21:28.352Z",
   "modelos": 45486
  },
  "liquidaciones": {
-  "ripley-70": {
-   "cliente": "Ripley",
-   "clave": "ripley",
-   "pct": 70,
-   "evento": "Evento 70%",
-   "modelos": 104,
-   "vence": "2026-10-28",
-   "subido": "2026-09-28T22:12:54.706Z"
+  "paris-deporte-converse": {
+   "cliente": "Paris",
+   "clave": "paris",
+   "pct": null,
+   "evento": "Deporte Converse",
+   "modelos": 27,
+   "vence": "2026-10-30",
+   "subido": "2026-09-30T18:38:56.456Z"
   },
   "paris-calzado-mujer": {
    "cliente": "Paris",
