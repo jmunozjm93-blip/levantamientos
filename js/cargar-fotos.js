@@ -73,15 +73,9 @@
     }
     let base = {};
     if (REPO === 'pagina-web') {
-      for (const name of ['Dashboard sell out.html','Dashboard Steve Madden.html']) {
-        const html = await read(name); if (!html) throw new Error('Falta ' + name);
-        const doc = new DOMParser().parseFromString(html, 'text/html');
-        const node = doc.getElementById('IMG');
-        const match = html.match(/const IMG = (?:FotosManuales\.combinar\()?(\{[^\r\n]+\})(?:,await FotosManuales\.leer\(\)\))?;/);
-        const text = node ? node.textContent : match?.[1];
-        if (!text) throw new Error('No se pudo comprobar el catálogo de ' + name);
-        base = FotosManuales.combinar(base, JSON.parse(text));
-      }
+      const text = await read('data/fotos-registradas.json');
+      if (!text) throw new Error('Falta el registro de fotos existentes.');
+      base = JSON.parse(text).img || {};
     } else {
       const text = await read('data/imagenes.json'); base = text ? JSON.parse(text).img || {} : {};
     }
