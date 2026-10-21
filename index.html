@@ -223,6 +223,7 @@ tbody tr,.card{cursor:pointer;}
   .nr,.msg{background:var(--card);border-radius:12px;margin-top:8px;}
 }
 </style>
+<script src="js/fotos-manuales.js?v=1"></script>
 </head>
 <body>
 <header class="hero" id="hero">
@@ -348,8 +349,8 @@ var C=[], D=[], T=[], M=[], S=[], TI=[], RAW=[], SM={}, IMGS={};
 var LIQS=[], LIQ={}, EVENTOS=[];
 // Fotos de Google Drive. El CDN (lh3) aguanta muchas peticiones seguidas; drive.google.com/thumbnail
 // devolvía 429 (demasiadas peticiones) al cargar 50 fotos de golpe y quedaban en blanco. Si lh3 falla se reintenta ahí.
-function fotoUrl(id,w){ return 'https://lh3.googleusercontent.com/d/'+id+'=w'+w; }
-function fotoAlt(id,w){ return 'https://drive.google.com/thumbnail?id='+id+'&sz=w'+w; }
+function fotoUrl(id,w){ return FotosManuales.url(id,w); }
+function fotoAlt(id,w){ return String(id).startsWith('img/manuales/') ? id : 'https://drive.google.com/thumbnail?id='+id+'&sz=w'+w; }
 function fotoError(img){ var id=img.getAttribute('data-id'), w=img.getAttribute('data-w'); if(img.getAttribute('data-alt')){ img.style.display='none'; img.parentNode.textContent='sin foto'; return; } img.setAttribute('data-alt','1'); setTimeout(function(){ img.src=fotoAlt(id,w); },1500); }
 var PS=50, CP=1, SC=-1, SD=1, AT=-1, SI=-1;
 var F=[];
@@ -376,6 +377,7 @@ async function cargar(){
   });
   var clientes=(await Promise.all(pedidos)).filter(function(j){ return j && j.filas; });
   clientes.sort(function(a,b){ var ia=ORDEN_CLIENTES.indexOf(a.cliente), ib=ORDEN_CLIENTES.indexOf(b.cliente); return (ia<0?99:ia)-(ib<0?99:ib) || a.cliente.localeCompare(b.cliente); });
+  IMGS=FotosManuales.combinar(IMGS,await FotosManuales.leer());
   TODOS=clientes; MAN=man;
   // pestañas: solo se muestran si hay más de un grupo publicado (marcas / steve)
   var grupos={}; clientes.forEach(function(c){ grupos[c.grupo||'marcas']=1; });
