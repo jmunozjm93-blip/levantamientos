@@ -151,20 +151,10 @@
    ]
   }
  },
- "actualizado": "2026-10-21T16:40:49.559Z",
+ "actualizado": "2026-10-21T16:41:08.180Z",
  "imagenes": {
   "subido": "2026-09-15T21:21:28.352Z",
   "modelos": 45486
  },
- "liquidaciones": {
-  "ripley-70": {
-   "cliente": "Ripley",
-   "clave": "ripley",
-   "pct": 70,
-   "evento": "Evento 70%",
-   "modelos": 104,
-   "vence": "2026-10-28",
-   "subido": "2026-09-28T22:12:54.706Z"
-  }
- }
+ "liquidaciones": {}
 }
