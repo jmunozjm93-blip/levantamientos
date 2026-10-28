@@ -101,16 +101,16 @@
   },
   "lapolar": {
    "nombre": "La Polar",
-   "subido": "2026-10-20T21:28:11.577Z",
-   "skus": 95,
-   "uds": 22496,
+   "subido": "2026-10-28T14:06:13.725Z",
+   "skus": 92,
+   "uds": 22009,
    "tiendas": 41,
    "hojas": [
     {
      "depto": "Accesorios, Calzado, Ropa",
-     "semana": "2026-W42 | 12-oct. al 18-oct.",
-     "modelos": 95,
-     "uds": 22496
+     "semana": "2026-W43 | 19-oct. al 25-oct.",
+     "modelos": 92,
+     "uds": 22009
     }
    ]
   },
@@ -151,7 +151,7 @@
    ]
   }
  },
- "actualizado": "2026-10-28T14:06:07.220Z",
+ "actualizado": "2026-10-28T14:06:13.725Z",
  "imagenes": {
   "subido": "2026-09-15T21:21:28.352Z",
   "modelos": 45486
