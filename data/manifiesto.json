@@ -35,34 +35,34 @@
   },
   "paris": {
    "nombre": "Paris",
-   "subido": "2026-11-03T18:01:51.430Z",
-   "skus": 703,
-   "uds": 74259,
+   "subido": "2026-11-11T12:46:26.705Z",
+   "skus": 698,
+   "uds": 75179,
    "tiendas": 50,
    "hojas": [
     {
      "depto": "Calzado mujer",
-     "semana": "2026-W44 | 26-oct. al 01-nov.",
-     "modelos": 98,
-     "uds": 8586
+     "semana": "2026-W45 | 02-nov. al 08-nov.",
+     "modelos": 95,
+     "uds": 8522
     },
     {
      "depto": "Deporte",
-     "semana": "2026-W44 | 26-oct. al 01-nov.",
-     "modelos": 265,
-     "uds": 29209
+     "semana": "2026-W45 | 02-nov. al 08-nov.",
+     "modelos": 262,
+     "uds": 29189
     },
     {
      "depto": "Juvenil",
-     "semana": "2026-W44 | 26-oct. al 01-nov.",
-     "modelos": 200,
-     "uds": 24265
+     "semana": "2026-W45 | 02-nov. al 08-nov.",
+     "modelos": 202,
+     "uds": 25144
     },
     {
      "depto": "Kids",
-     "semana": "2026-W44 | 26-oct. al 01-nov.",
-     "modelos": 140,
-     "uds": 12199
+     "semana": "2026-W45 | 02-nov. al 08-nov.",
+     "modelos": 139,
+     "uds": 12324
     }
    ]
   },
@@ -151,7 +151,7 @@
    ]
   }
  },
- "actualizado": "2026-11-11T12:46:21.772Z",
+ "actualizado": "2026-11-11T12:46:26.705Z",
  "imagenes": {
   "subido": "2026-09-15T21:21:28.352Z",
   "modelos": 45486
