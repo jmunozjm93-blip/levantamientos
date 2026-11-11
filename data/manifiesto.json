@@ -116,16 +116,16 @@
   },
   "hites": {
    "nombre": "Hites",
-   "subido": "2026-11-03T18:01:41.655Z",
-   "skus": 103,
-   "uds": 7914,
+   "subido": "2026-11-11T12:46:17.185Z",
+   "skus": 104,
+   "uds": 7855,
    "tiendas": 29,
    "hojas": [
     {
      "depto": "Accesorios, Calzado, Ropa",
-     "semana": "2026-W44 | 26-oct. al 01-nov.",
-     "modelos": 103,
-     "uds": 7914
+     "semana": "2026-W45 | 02-nov. al 08-nov.",
+     "modelos": 104,
+     "uds": 7855
     }
    ]
   },
@@ -151,7 +151,7 @@
    ]
   }
  },
- "actualizado": "2026-11-11T12:46:12.553Z",
+ "actualizado": "2026-11-11T12:46:17.185Z",
  "imagenes": {
   "subido": "2026-09-15T21:21:28.352Z",
   "modelos": 45486
