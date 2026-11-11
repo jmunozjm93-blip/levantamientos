@@ -68,34 +68,34 @@
   },
   "ripley": {
    "nombre": "Ripley",
-   "subido": "2026-11-03T18:01:57.141Z",
-   "skus": 468,
-   "uds": 38928,
+   "subido": "2026-11-11T12:46:31.547Z",
+   "skus": 424,
+   "uds": 36907,
    "tiendas": 44,
    "hojas": [
     {
      "depto": "Deporte",
-     "semana": "2026-W44 | 26-oct. al 01-nov.",
-     "modelos": 173,
-     "uds": 12850
+     "semana": "2026-W45 | 02-nov. al 08-nov.",
+     "modelos": 132,
+     "uds": 11326
     },
     {
      "depto": "Calzado mujer",
-     "semana": "2026-W44 | 26-oct. al 01-nov.",
+     "semana": "2026-W45 | 02-nov. al 08-nov.",
      "modelos": 76,
-     "uds": 5769
+     "uds": 5722
     },
     {
      "depto": "Juvenil",
-     "semana": "2026-W44 | 26-oct. al 01-nov.",
-     "modelos": 124,
-     "uds": 12965
+     "semana": "2026-W45 | 02-nov. al 08-nov.",
+     "modelos": 123,
+     "uds": 12442
     },
     {
      "depto": "Kids",
-     "semana": "2026-W44 | 26-oct. al 01-nov.",
-     "modelos": 95,
-     "uds": 7344
+     "semana": "2026-W45 | 02-nov. al 08-nov.",
+     "modelos": 93,
+     "uds": 7417
     }
    ]
   },
@@ -151,7 +151,7 @@
    ]
   }
  },
- "actualizado": "2026-11-11T12:46:26.705Z",
+ "actualizado": "2026-11-11T12:46:31.547Z",
  "imagenes": {
   "subido": "2026-09-15T21:21:28.352Z",
   "modelos": 45486
